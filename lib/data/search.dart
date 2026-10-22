@@ -33,6 +33,21 @@ String normalizeText(String s) {
   return t.replaceAll(_nonWord, ' ').trim();
 }
 
+/// Everyday words mapped to the word the tariff uses. Same lists as MIRA
+/// (hs-tariff-service.mjs AR_SYNONYMS / LATIN_SYNONYMS), plus coffee (tariff: «بن»).
+const _synonyms = <String, String>{
+  'رز': 'ارز',
+  'موبايل': 'هواتف',
+  'موبايلات': 'هواتف',
+  'جوال': 'هواتف',
+  'جوالات': 'هواتف',
+  'قهوه': 'بن',
+  'phone': 'telephone',
+  'phones': 'telephones',
+  'chicken': 'poultry',
+  'chickens': 'poultry',
+};
+
 List<String> _words(String s) => normalizeText(s).split(' ').where((w) => w.isNotEmpty).toList();
 
 /// A line prepared once for searching.
@@ -66,7 +81,12 @@ class TariffSearch {
       var score = 0;
       var all = true;
       for (final t in terms) {
-        final s = _termScore(i, t);
+        var s = _termScore(i, t);
+        final alt = _synonyms[t];
+        if (alt != null) {
+          final a = _termScore(i, alt);
+          if (a > s) s = a;
+        }
         if (s == 0) {
           all = false;
           break;

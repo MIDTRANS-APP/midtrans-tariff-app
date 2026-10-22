@@ -42,6 +42,11 @@ void main() {
     expect(r.first.code.startsWith('0901'), isTrue);
   });
 
+  test('everyday words find the tariff term (قهوة → بن)', () {
+    final r = search.search('قهوة');
+    expect(r.any((x) => x.code.startsWith('0901')), isTrue);
+  });
+
   test('figures are shown verbatim from the file', () {
     final r = row('52094200');
     final fees = feeSummary(r, 'ar');
