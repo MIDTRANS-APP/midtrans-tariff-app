@@ -23,10 +23,50 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      # Test build for phones and Huawei devices (signed with the debug key; not for the stores).
-      - run: flutter build apk --release
+      # Store signing key from repository secrets. Without the secrets (forks, first runs)
+      # the builds are signed with the debug key: fine for testing, rejected by the stores.
+      - name: Upload key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::warning::No upload key in secrets: builds are debug-signed and not for the stores."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/upload.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+            echo "keyPassword=${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+          } > android/key.properties
+      # Build number grows with every run, as the stores require.
+      - run: flutter build apk --release --build-number=${{ github.run_number }}
+      - run: flutter build appbundle --release --build-number=${{ github.run_number }}
+      - run: rm -f android/key.properties
       - uses: actions/upload-artifact@v4
         with:
-          name: midtrans-tariff-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: midtrans-tariff-android
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
+
+  # Checks that the iPhone app compiles. Signing and the App Store upload need the
+  # Apple developer account; macOS runners cost more minutes, so this runs on main
+  # and on demand only.
+  build-ios:
+    if: github.event_name != 'pull_request'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.7"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
