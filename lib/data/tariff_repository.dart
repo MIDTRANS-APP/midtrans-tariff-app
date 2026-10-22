@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart' show GZipDecoder;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
@@ -34,7 +35,8 @@ class TariffRepository {
       // a damaged cache falls back to the bundled snapshot
     }
     final bytes = await rootBundle.load(AppConfig.bundledTariffAsset);
-    final text = utf8.decode(gzip.decode(bytes.buffer.asUint8List()));
+    // pure-Dart gunzip: same result on every platform (dart:io's zlib is native-only)
+    final text = utf8.decode(GZipDecoder().decodeBytes(bytes.buffer.asUint8List()));
     return compute(_parse, (text, 'bundle'));
   }
 
