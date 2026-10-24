@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data/favorites.dart';
+import 'data/push.dart';
 import 'data/search.dart';
 import 'data/tariff_models.dart';
 import 'data/tariff_repository.dart';
@@ -12,6 +15,7 @@ class AppState extends ChangeNotifier {
 
   final TariffRepository repository;
   final favorites = Favorites();
+  final push = Push();
 
   TariffData? data;
   TariffSearch? _search;
@@ -26,6 +30,7 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     lang = prefs.getString('lang') ?? 'ar';
     await favorites.load();
+    unawaited(push.start(lang));
     try {
       _use(await repository.loadLocal());
     } catch (e) {
@@ -61,6 +66,7 @@ class AppState extends ChangeNotifier {
   Future<void> toggleLang() async {
     lang = lang == 'ar' ? 'en' : 'ar';
     notifyListeners();
+    unawaited(push.setLang(lang));
     await (await SharedPreferences.getInstance()).setString('lang', lang);
   }
 }

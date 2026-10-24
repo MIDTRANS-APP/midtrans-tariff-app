@@ -66,6 +66,22 @@ class _AboutScreenState extends State<AboutScreen> {
         link(s.authority, AppConfig.authorityUrl),
         link(s.privacy, AppConfig.privacyUrl),
         ListTile(title: Text(s.language), trailing: const Icon(Icons.translate), onTap: app.toggleLang),
+        ListenableBuilder(
+          listenable: app.push,
+          builder: (context, _) => !app.push.available
+              ? const SizedBox.shrink()
+              : SwitchListTile(
+                  title: Text(s.pushTitle),
+                  subtitle: Text(s.pushSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  value: app.push.enabled,
+                  onChanged: (on) async {
+                    await app.push.setEnabled(on);
+                    if (on && !app.push.enabled && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.pushDenied)));
+                    }
+                  },
+                ),
+        ),
       ]),
     );
   }

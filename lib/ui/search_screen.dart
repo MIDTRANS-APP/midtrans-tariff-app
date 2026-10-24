@@ -116,6 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final s = app.s;
     final recent = app.favorites.recent;
     return [
+      PushAskCard(push: app.push),
       if (recent.isNotEmpty) ...[
         GoldHeading(s.recent),
         Padding(
