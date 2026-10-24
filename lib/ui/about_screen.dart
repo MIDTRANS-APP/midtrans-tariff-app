@@ -37,6 +37,11 @@ class _AboutScreenState extends State<AboutScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(s.tabAbout)),
       body: ListView(children: [
+        // Logo of the General Authority for Borders and Customs, used with its written permission.
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
+          child: Image(image: AssetImage('assets/branding/ports-logo.png'), height: 44, alignment: AlignmentDirectional.centerStart),
+        ),
         const UnofficialNotice(),
         if (d != null)
           Padding(
@@ -61,6 +66,22 @@ class _AboutScreenState extends State<AboutScreen> {
         link(s.authority, AppConfig.authorityUrl),
         link(s.privacy, AppConfig.privacyUrl),
         ListTile(title: Text(s.language), trailing: const Icon(Icons.translate), onTap: app.toggleLang),
+        ListenableBuilder(
+          listenable: app.push,
+          builder: (context, _) => !app.push.available
+              ? const SizedBox.shrink()
+              : SwitchListTile(
+                  title: Text(s.pushTitle),
+                  subtitle: Text(s.pushSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+                  value: app.push.enabled,
+                  onChanged: (on) async {
+                    await app.push.setEnabled(on);
+                    if (on && !app.push.enabled && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.pushDenied)));
+                    }
+                  },
+                ),
+        ),
       ]),
     );
   }

@@ -43,6 +43,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   archive: ^4.5.2
+  firebase_core: ^5.1.0
+  firebase_messaging: ^17.0.1
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +66,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/syria-tariff.json.gz
+    - assets/branding/app-icon-96.png
+    - assets/branding/ports-emblem.png
+    - assets/branding/ports-logo.png
   fonts:
     - family: Cairo
       fonts:

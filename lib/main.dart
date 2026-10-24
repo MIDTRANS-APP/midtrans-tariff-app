@@ -8,9 +8,14 @@ import 'ui/mira_screen.dart';
 import 'ui/search_screen.dart';
 import 'ui/theme.dart';
 
+final _messenger = GlobalKey<ScaffoldMessengerState>();
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   final state = AppState();
+  state.push.onForeground = (title, body) => _messenger.currentState?.showSnackBar(
+        SnackBar(content: Text(title.isEmpty ? body : '$title\n$body'), duration: const Duration(seconds: 6)),
+      );
   state.start();
   runApp(TariffApp(state: state));
 }
@@ -28,6 +33,7 @@ class TariffApp extends StatelessWidget {
         return MaterialApp(
           title: app.s.appName,
           debugShowCheckedModeBanner: false,
+          scaffoldMessengerKey: _messenger,
           theme: buildTheme(),
           locale: Locale(app.lang),
           supportedLocales: const [Locale('ar'), Locale('en')],

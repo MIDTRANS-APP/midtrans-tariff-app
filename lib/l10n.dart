@@ -52,6 +52,15 @@ class S {
   String get webPage => _t('صفحة التعرفة على موقع ميدترانس', 'Tariff page on mid-trans.com');
   String get loading => _t('جارٍ تحميل التعرفة…', 'Loading the tariff…');
   String get ad => _t('إعلان', 'Ad');
+  String get pushTitle => _t('إشعارات التحديثات والعروض', 'Updates and offers');
+  String get pushAsk => _t(
+      'هل تريد إشعاراً عند تحديث التعرفة، وعروض ميدترانس للشحن؟ يمكنك إيقافها في أي وقت من «عن التطبيق».',
+      'Get a notification when the tariff is updated, and MIDTRANS shipping offers? You can turn it off any time in About.');
+  String get pushYes => _t('نعم', 'Yes');
+  String get pushNo => _t('لا شكراً', 'No thanks');
+  String get pushSwitchHint => _t('تحديثات التعرفة وعروض ميدترانس', 'Tariff updates and MIDTRANS offers');
+  String get pushDenied => _t('الإشعارات متوقفة في إعدادات الهاتف. فعّلها من الإعدادات ثم أعد المحاولة.',
+      'Notifications are off in the phone settings. Turn them on there and try again.');
   String chapter(String c) => _t('الفصل $c', 'Chapter $c');
   String copied(String c) => _t('تم نسخ $c', '$c copied');
 }

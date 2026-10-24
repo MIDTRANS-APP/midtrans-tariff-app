@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../data/tariff_models.dart';
 import '../l10n.dart';
 import 'category_screen.dart';
+import 'motion.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -47,12 +48,9 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.midtransBlue, borderRadius: BorderRadius.circular(8)),
-            child: const Text('MT', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white)),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(9),
+            child: Image.asset('assets/branding/app-icon-96.png', width: 34, height: 34, filterQuality: FilterQuality.medium),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -100,7 +98,8 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Icon(Icons.explore_outlined, color: AppColors.gold, size: 22)),
+            // Emblem of the General Authority for Borders and Customs, used with its written permission.
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Image(image: AssetImage('assets/branding/ports-emblem.png'), height: 32)),
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
           ]),
           const SizedBox(height: 12),
@@ -117,12 +116,13 @@ class _SearchScreenState extends State<SearchScreen> {
     final s = app.s;
     final recent = app.favorites.recent;
     return [
+      PushAskCard(push: app.push),
       if (recent.isNotEmpty) ...[
         GoldHeading(s.recent),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Wrap(spacing: 8, runSpacing: 8, children: [
-            for (final q in recent) ActionChip(label: Text(q), onPressed: () => _setQuery(q)),
+            for (final q in recent) Pressable(child: ActionChip(label: Text(q), onPressed: () => _setQuery(q))),
           ]),
         ),
       ],
@@ -138,13 +138,15 @@ class _SearchScreenState extends State<SearchScreen> {
           childAspectRatio: 2.3,
           children: [
             for (final c in app.categories)
-              Card(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CategoryScreen(category: c))),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Align(alignment: AlignmentDirectional.centerStart, child: Text(c, style: const TextStyle(fontSize: 13, height: 1.5))),
+              Pressable(
+                child: Card(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => CategoryScreen(category: c))),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Align(alignment: AlignmentDirectional.centerStart, child: Text(c, style: const TextStyle(fontSize: 13, height: 1.5))),
+                    ),
                   ),
                 ),
               ),
