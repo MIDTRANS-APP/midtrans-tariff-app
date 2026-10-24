@@ -65,6 +65,8 @@ flutter:
   assets:
     - assets/data/syria-tariff.json.gz
     - assets/branding/app-icon-96.png
+    - assets/branding/ports-emblem.png
+    - assets/branding/ports-logo.png
   fonts:
     - family: Cairo
       fonts:

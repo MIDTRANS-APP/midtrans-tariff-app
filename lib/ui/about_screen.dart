@@ -37,6 +37,11 @@ class _AboutScreenState extends State<AboutScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(s.tabAbout)),
       body: ListView(children: [
+        // Logo of the General Authority for Borders and Customs, used with its written permission.
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
+          child: Image(image: AssetImage('assets/branding/ports-logo.png'), height: 44, alignment: AlignmentDirectional.centerStart),
+        ),
         const UnofficialNotice(),
         if (d != null)
           Padding(

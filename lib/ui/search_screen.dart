@@ -98,7 +98,8 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Icon(Icons.explore_outlined, color: AppColors.gold, size: 22)),
+            // Emblem of the General Authority for Borders and Customs, used with its written permission.
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Image(image: AssetImage('assets/branding/ports-emblem.png'), height: 32)),
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
           ]),
           const SizedBox(height: 12),
