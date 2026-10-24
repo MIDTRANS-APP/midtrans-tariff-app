@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../data/fee_text.dart';
 import '../data/tariff_models.dart';
 import 'item_screen.dart';
+import 'motion.dart';
 import 'theme.dart';
 
 class GoldHeading extends StatelessWidget {
@@ -42,36 +43,38 @@ class RowTile extends StatelessWidget {
     final lang = app.lang;
     final fee = feeSummary(row, lang).headline;
     final other = lang == 'ar' ? row.text('description', 'en') : row.text('description', 'ar');
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ItemScreen(code: row.code))),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Row(children: [
-              CodeText(row.displayCode),
-              const Spacer(),
-              if (fee.isNotEmpty)
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(color: const Color(0xFF1E3D3A), borderRadius: BorderRadius.circular(6)),
-                    child: Text(fee, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xFFC9D3D1))),
+    return Pressable(
+      child: Card(
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ItemScreen(code: row.code))),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              Row(children: [
+                CodeText(row.displayCode),
+                const Spacer(),
+                if (fee.isNotEmpty)
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: const Color(0xFF1E3D3A), borderRadius: BorderRadius.circular(6)),
+                      child: Text(fee, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xFFC9D3D1))),
+                    ),
                   ),
-                ),
+              ]),
+              const SizedBox(height: 6),
+              Text(row.description(lang), style: const TextStyle(fontSize: 14, height: 1.6)),
+              if (other.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(other,
+                    textDirection: lang == 'ar' ? TextDirection.ltr : TextDirection.rtl,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+              ],
             ]),
-            const SizedBox(height: 6),
-            Text(row.description(lang), style: const TextStyle(fontSize: 14, height: 1.6)),
-            if (other.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(other,
-                  textDirection: lang == 'ar' ? TextDirection.ltr : TextDirection.rtl,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-            ],
-          ]),
+          ),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import '../app_state.dart';
 import '../config.dart';
+import 'motion.dart';
 import 'theme.dart';
 
 /// MIRA as it already runs on chat.midtrans.org, opened inside the app.
@@ -69,7 +70,7 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
                 const SizedBox(height: 12),
                 Text(s.miraOffline, textAlign: TextAlign.center, style: const TextStyle(height: 1.7)),
                 const SizedBox(height: 16),
-                OutlinedButton(onPressed: _retry, child: Text(s.retry)),
+                Pressable(child: OutlinedButton(onPressed: _retry, child: Text(s.retry))),
               ]),
             ),
           )

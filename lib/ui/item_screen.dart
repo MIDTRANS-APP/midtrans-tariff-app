@@ -7,6 +7,7 @@ import '../app_state.dart';
 import '../config.dart';
 import '../data/fee_text.dart';
 import 'mira_screen.dart';
+import 'motion.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -40,7 +41,7 @@ class ItemScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: saved ? s.unsave : s.save,
-            icon: Icon(saved ? Icons.star : Icons.star_border, color: AppColors.gold),
+            icon: PopSwitcher(child: Icon(saved ? Icons.star : Icons.star_border, key: ValueKey(saved), color: AppColors.gold)),
             onPressed: () => app.favorites.toggle(row.code),
           ),
           IconButton(
@@ -115,10 +116,14 @@ class ItemScreen extends StatelessWidget {
         const SizedBox(height: 16),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.midtransBlue, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52)),
-            onPressed: openMira,
-            child: Text(s.askMira, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          child: Pressable(
+            child: Shine(
+              child: FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.midtransBlue, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52)),
+                onPressed: openMira,
+                child: Text(s.askMira, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 16),
