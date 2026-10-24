@@ -1,0 +1,20 @@
+{
+ "ar-SA": {
+  "name": "التعرفة الجمركية السورية",
+  "subtitle": "بنود الجمارك ورسومها بدون نت",
+  "keywords": "جمارك,تعريفة,بند جمركي,رسوم,استيراد,تصدير,تخليص,شحن,حاويات,ميدترانس,HS,ضريبة,منافذ,دمشق,مخلص",
+  "promotionalText": "أكثر من 6,000 بند من التعرفة الجمركية السورية مع الرسوم المرجعية، بالعربية والإنكليزية، ويعمل بدون إنترنت. اسأل ميرا عن أي بند.",
+  "description": "ابحث في التعرفة الجمركية السورية برقم البند أو باسم البضاعة، بالعربية أو الإنكليزية.\n\n• أكثر من 6,000 بند بوصف عربي وإنكليزي.\n• الرسوم المرجعية لكل بند كما وردت في الجداول المنشورة: رسم الاستيراد والرسوم الإضافية والإجمالي.\n• توضيح بنود القائمة السلبية، والبنود المعدّلة بمراسيم لاحقة، والبنود غير الواردة في الجدول المعدّل.\n• يعمل بدون إنترنت، ويتحدث تلقائياً من موقع ميدترانس عند الاتصال.\n• احفظ البنود التي تستخدمها، وشاركها برسالة.\n• اسأل ميرا، مساعدة ميدترانس، عن البند أو عن الشحن.\n• إشعارات اختيارية بتحديثات التعرفة وعروض ميدترانس، بموافقتك فقط، ويمكن إيقافها في أي وقت.\n\nتطبيق غير رسمي من ميدترانس (المتوسط للشحن والخدمات)، وليس تابعاً لأي جهة حكومية. الأرقام للاسترشاد فقط، والتصنيف والرسوم النهائية تؤكدها الجمارك.",
+  "supportUrl": "https://www.mid-trans.com/contact-us/",
+  "marketingUrl": "https://www.mid-trans.com/ar/customs-tariff/syria/"
+ },
+ "en-US": {
+  "name": "Syrian Customs Tariff",
+  "subtitle": "HS codes & import duties",
+  "keywords": "HS code,duty,import,export,clearance,shipping,freight,cargo,broker,fees,harmonized,MIDTRANS,Damascus",
+  "promotionalText": "6,000+ Syrian customs tariff codes with reference fees, in Arabic and English, working offline. Ask MIRA about any code.",
+  "description": "Search the Syrian customs tariff by HS code or goods name, in Arabic or English.\n\n• More than 6,000 codes with Arabic and English descriptions.\n• Reference fees for each code as published: import duty, additional fees and total.\n• Clear flags for negative-list codes, codes amended by later decrees, and codes not in the amended table.\n• Works offline and updates itself from mid-trans.com when connected.\n• Save the codes you use and share them.\n• Ask MIRA, the MIDTRANS assistant, about a code or about shipping.\n• Optional notifications for tariff updates and MIDTRANS offers, only if you say yes; turn them off any time.\n\nAn unofficial app by MIDTRANS Shipping & Services, not affiliated with any government body. Figures are for guidance only; final classification and fees are confirmed by customs.",
+  "supportUrl": "https://www.mid-trans.com/contact-us/",
+  "marketingUrl": "https://www.mid-trans.com/customs-tariff/syria/"
+ }
+}
