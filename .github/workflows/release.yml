@@ -65,3 +65,25 @@ jobs:
           releaseFiles: build/app/outputs/bundle/release/app-release.aab
           track: internal
           status: draft
+
+  # The iPhone archive, unsigned. Signing and the TestFlight upload are done on the
+  # owner's Mac with the Apple account signed in to Xcode:
+  #   xcodebuild -exportArchive -archivePath Runner.xcarchive \
+  #     -exportOptionsPlist ios/ExportOptions-upload.plist -allowProvisioningUpdates
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.7"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter build ipa --release --no-codesign --build-number=${{ github.run_number }}0
+      - run: cd build/ios/archive && ditto -c -k --keepParent Runner.xcarchive Runner.xcarchive.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: store-ios-archive
+          path: build/ios/archive/Runner.xcarchive.zip
+          retention-days: 30
