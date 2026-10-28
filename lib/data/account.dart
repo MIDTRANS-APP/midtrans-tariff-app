@@ -48,8 +48,45 @@ class Account extends ChangeNotifier {
   User? user;
   Profile profile = const Profile();
   String _lang = 'ar';
+  bool _signingUp = false;
 
   bool get signedIn => user != null;
+
+  /// Name, email and phone are all required (owner 2026-10-28); a Google or Apple account
+  /// without a phone is asked to complete its profile.
+  bool get profileComplete => profile.name.isNotEmpty && profile.email.isNotEmpty && profile.phone.isNotEmpty;
+
+  // ---- email and password -------------------------------------------------
+
+  /// A new account with every field required. Throws [FirebaseAuthException]
+  /// (email-already-in-use, weak-password, invalid-email…). Sends a verification email.
+  Future<void> signUpWithEmail({required String name, required String email, required String password, required String phone}) async {
+    // the sign-in listener must not load (and save) an empty profile meanwhile
+    _signingUp = true;
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      final u = cred.user!;
+      await u.updateDisplayName(name.trim());
+      user = u;
+      profile = Profile(name: name.trim(), email: email.trim(), phone: phone.trim());
+      await _save();
+    } finally {
+      _signingUp = false;
+    }
+    final u = user!;
+    try {
+      await u.sendEmailVerification();
+    } catch (e) {
+      debugPrint('account: verification email: $e');
+    }
+    await setNewsletter(true);
+    notifyListeners();
+  }
+
+  Future<void> signInWithEmail(String email, String password) =>
+      _auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+
+  Future<void> resetPassword(String email) => _auth.sendPasswordResetEmail(email: email.trim());
 
   /// Apple on iPhone (Apple's rule when other sign-in is offered); Google always;
   /// Facebook once its Meta app is set up in Firebase ([AppConfig.facebookSignIn]).
@@ -69,6 +106,7 @@ class Account extends ChangeNotifier {
     available = true;
     _auth.authStateChanges().listen((u) async {
       user = u;
+      if (_signingUp) return;
       profile = const Profile();
       if (u != null) await _loadProfile();
       notifyListeners();

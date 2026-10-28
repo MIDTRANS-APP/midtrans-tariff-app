@@ -80,8 +80,8 @@ class S {
         SignInWay.facebook => _t('المتابعة مع Facebook', 'Continue with Facebook'),
       };
   String get signInPrivacy => _t(
-      'نحفظ اسمك وبريدك ورقمك (إن أضفته) واشتراكك في النشرة فقط. يمكنك حذف حسابك في أي وقت.',
-      'We keep only your name, email, phone (if you add it) and newsletter choice. You can delete your account any time.');
+      'نحفظ اسمك وبريدك ورقم جوالك واشتراكك في النشرة فقط. يمكنك حذف حسابك في أي وقت.',
+      'We keep only your name, email, mobile number and newsletter choice. You can delete your account any time.');
   String get signInFailed => _t('تعذّر تسجيل الدخول. حاول مرة أخرى.', 'Sign-in failed. Please try again.');
   String providerName(String id) => switch (id) {
         'google.com' => 'Google',
@@ -92,7 +92,30 @@ class S {
   String get profile => _t('الملف الشخصي', 'Profile');
   String get nameLabel => _t('الاسم', 'Name');
   String get emailLabel => _t('البريد الإلكتروني', 'Email');
-  String get phoneLabel => _t('رقم الجوال (اختياري)', 'Mobile number (optional)');
+  String get phoneLabel => _t('رقم الجوال', 'Mobile number');
+  String get passwordLabel => _t('كلمة المرور', 'Password');
+  String get createAccount => _t('إنشاء حساب جديد', 'Create a new account');
+  String get signInEmail => _t('الدخول بالبريد الإلكتروني', 'Sign in with email');
+  String get orEmail => _t('أو بالبريد الإلكتروني', 'or with email');
+  String get forgotPassword => _t('نسيت كلمة المرور؟', 'Forgot password?');
+  String get allRequired => _t('كل الحقول مطلوبة.', 'All fields are required.');
+  String get nameRequired => _t('اكتب اسمك الكامل.', 'Enter your full name.');
+  String get emailInvalid => _t('اكتب بريداً إلكترونياً صحيحاً.', 'Enter a valid email.');
+  String get phoneRequired => _t('اكتب رقم الجوال مع رمز الدولة.', 'Enter your mobile number with the country code.');
+  String get passwordShort => _t('كلمة المرور 8 أحرف على الأقل.', 'The password needs at least 8 characters.');
+  String get emailFirst => _t('اكتب بريدك أولاً لنرسل رابط إعادة التعيين.', 'Enter your email first to get the reset link.');
+  String get resetSent => _t('أرسلنا رابط إعادة تعيين كلمة المرور إلى بريدك.', 'We sent a password reset link to your email.');
+  String get verifySent => _t('أُنشئ حسابك. أرسلنا رسالة لتأكيد بريدك.', 'Your account is ready. We sent an email to confirm your address.');
+  String get completeProfile => _t('أكمل ملفك: الاسم والبريد ورقم الجوال مطلوبة.', 'Complete your profile: name, email and mobile number are required.');
+  String authError(String code) => switch (code) {
+        'email-already-in-use' => _t('هذا البريد مسجّل. سجّل الدخول به أو استعد كلمة المرور.', 'This email is already registered. Sign in or reset the password.'),
+        'invalid-email' => emailInvalid,
+        'weak-password' => passwordShort,
+        'wrong-password' || 'invalid-credential' || 'user-not-found' => _t('البريد أو كلمة المرور غير صحيحة.', 'Wrong email or password.'),
+        'too-many-requests' => _t('محاولات كثيرة. انتظر قليلاً ثم حاول.', 'Too many attempts. Wait a moment and try again.'),
+        'network-request-failed' => _t('لا يوجد اتصال بالإنترنت.', 'No internet connection.'),
+        _ => signInFailed,
+      };
   String get save2 => _t('حفظ', 'Save');
   String get saved => _t('تم الحفظ.', 'Saved.');
   String get settings => _t('الإعدادات', 'Settings');

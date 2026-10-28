@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../app_state.dart';
 import '../data/account.dart';
+import 'email_auth_screen.dart';
 import 'motion.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -60,9 +61,9 @@ class _SignInState extends State<_SignIn> {
       const SizedBox(height: 8),
       Text(s.signInWhy, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13.5, height: 1.7, color: AppColors.muted)),
       const SizedBox(height: 24),
-      if (!app.account.available || ways.isEmpty)
+      if (!app.account.available)
         Text(s.signInSoon, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.warn))
-      else
+      else ...[
         for (final w in ways)
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
@@ -70,7 +71,34 @@ class _SignInState extends State<_SignIn> {
               child: _WayButton(way: w, label: s.signInWith(w), busy: _busy == w, onPressed: _busy == null ? () => _go(w) : null),
             ),
           ),
-      const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(children: [
+            const Expanded(child: Divider(color: AppColors.line)),
+            Padding(padding: const EdgeInsets.symmetric(horizontal: 10), child: Text(s.orEmail, style: const TextStyle(fontSize: 12, color: AppColors.muted))),
+            const Expanded(child: Divider(color: AppColors.line)),
+          ]),
+        ),
+        const SizedBox(height: 6),
+        Pressable(
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.gold, foregroundColor: AppColors.ground, minimumSize: const Size.fromHeight(52)),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmailAuthScreen(signUp: true))),
+            icon: const Icon(Icons.person_add_alt_1),
+            label: Text(s.createAccount, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Pressable(
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(foregroundColor: AppColors.goldText, side: const BorderSide(color: AppColors.gold), minimumSize: const Size.fromHeight(50)),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmailAuthScreen(signUp: false))),
+            icon: const Icon(Icons.mail_outline),
+            label: Text(s.signInEmail, style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
+          ),
+        ),
+      ],
+      const SizedBox(height: 16),
       Text(s.signInPrivacy, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11.5, height: 1.6, color: AppColors.muted)),
     ]);
   }
@@ -150,8 +178,11 @@ class _ProfileState extends State<_Profile> {
     super.dispose();
   }
 
+  final _form = GlobalKey<FormState>();
+
   Future<void> _save() async {
     final app = AppScope.of(context);
+    if (!_form.currentState!.validate()) return;
     setState(() => _saving = true);
     await app.account.updateProfile(app.account.profile.copyWith(name: _name.text.trim(), email: _email.text.trim(), phone: _phone.text.trim()));
     if (!mounted) return;
@@ -218,15 +249,29 @@ class _ProfileState extends State<_Profile> {
           ),
         ]),
       ),
+      if (!acc.profileComplete)
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(10), border: Border.all(color: AppColors.warn)),
+          child: Row(children: [
+            const Icon(Icons.error_outline, color: AppColors.warn, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(s.completeProfile, style: const TextStyle(fontSize: 13, height: 1.5))),
+          ]),
+        ),
       GoldHeading(s.profile),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Column(children: [
-          TextField(controller: _name, decoration: field(s.nameLabel, Icons.badge_outlined)),
+        child: Form(
+          key: _form,
+          autovalidateMode: acc.profileComplete ? AutovalidateMode.disabled : AutovalidateMode.always,
+          child: Column(children: [
+          TextFormField(controller: _name, decoration: field(s.nameLabel, Icons.badge_outlined), validator: (v) => EmailAuthFields.name(s, v)),
           const SizedBox(height: 12),
-          TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: field(s.emailLabel, Icons.alternate_email)),
+          TextFormField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: field(s.emailLabel, Icons.alternate_email), validator: (v) => EmailAuthFields.email(s, v)),
           const SizedBox(height: 12),
-          TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: field(s.phoneLabel, Icons.phone_outlined)),
+          TextFormField(controller: _phone, keyboardType: TextInputType.phone, decoration: field(s.phoneLabel, Icons.phone_outlined), validator: (v) => EmailAuthFields.phone(s, v)),
           const SizedBox(height: 12),
           Pressable(
             child: FilledButton(
@@ -236,6 +281,7 @@ class _ProfileState extends State<_Profile> {
             ),
           ),
         ]),
+        ),
       ),
       GoldHeading(s.settings),
       SwitchListTile(
