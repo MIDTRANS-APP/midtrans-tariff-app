@@ -66,6 +66,10 @@ class S {
   String get hsWorldwide => _t(
       'تذكير: أول 6 أرقام من البند (النظام المنسّق HS) عالمية وموحّدة بين الدول، أما الخانات التفصيلية بعدها فتختلف من دولة إلى أخرى. لذلك قد لا يطابق رقمٌ من بلد آخر التعرفة السورية كاملاً.',
       'Reminder: the first 6 digits of a code (the Harmonized System, HS) are the same worldwide; the detailed digits after them differ from country to country, so a full code from another country may not match the Syrian tariff.');
+  String get ratesLabel => _t('أسعار الشحن', 'Freight');
+  String rateQuestion(String container, String from, String to) => _t(
+      'أريد عرض سعر شحن حاوية $container من $from إلى $to',
+      'I would like a quote to ship a $container container from $from to $to');
   List<String> get miraCountries => en
       ? const ['Syria', 'GCC tariff (Gulf countries)']
       : const ['سوريا', 'تعرفة دول الخليج'];

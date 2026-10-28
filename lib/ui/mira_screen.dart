@@ -11,7 +11,7 @@ import 'theme.dart';
 /// MIRA drawn by the app in its own design, talking to MIRA's brain directly
 /// (owner 2026-10-28: «خذ API لميرا و اعمل انتغريت بتصميم التطبيق»).
 class MiraScreen extends StatefulWidget {
-  const MiraScreen({super.key, this.standalone = false, this.code, this.displayCode});
+  const MiraScreen({super.key, this.standalone = false, this.code, this.displayCode, this.question});
 
   /// Pushed from a code page (own app bar, own bottom inset) rather than shown as a tab.
   final bool standalone;
@@ -19,6 +19,9 @@ class MiraScreen extends StatefulWidget {
   /// A code page opens MIRA asking about this code (8 digits) and attaches its tariff card.
   final String? code;
   final String? displayCode;
+
+  /// A question sent as soon as the screen opens (the freight prices strip asks for a quote).
+  final String? question;
 
   @override
   State<MiraScreen> createState() => _MiraScreenState();
@@ -62,6 +65,8 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
         final s = AppScope.of(context).s;
         _send(s.askAboutCode(widget.displayCode ?? widget.code!), code: widget.code);
       });
+    } else if (widget.question != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _send(widget.question!));
     }
   }
 

@@ -8,6 +8,7 @@ import '../data/tariff_models.dart';
 import '../l10n.dart';
 import 'category_screen.dart';
 import 'motion.dart';
+import 'rates_ticker.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -70,6 +71,7 @@ class _SearchScreenState extends State<SearchScreen> {
       body: !app.ready
           ? Center(child: app.loadError != null ? Text('${app.loadError}') : Text(s.loading))
           : Column(children: [
+              const RatesTicker(),
               if (_query.trim().isEmpty) _hero(s),
               Padding(
                 key: const ValueKey('search-field'),

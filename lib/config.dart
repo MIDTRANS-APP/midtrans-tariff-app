@@ -19,6 +19,9 @@ class AppConfig {
   static const miraApi = 'https://api.midtrans.org/api/v1/chat/ask';
   static const miraOrigin = 'https://chat.midtrans.org';
 
+  /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
+  static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
+
   /// MIDTRANS team on WhatsApp (the number MIRA's page uses), offered when MIRA hands over.
   static const whatsappUrl = 'https://wa.me/963930204408';
 
