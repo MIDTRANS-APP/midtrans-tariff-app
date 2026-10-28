@@ -166,15 +166,56 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<Widget> _results(AppState app, List<TariffRow> results) {
     final s = app.s;
+    final digits = _query.replaceAll(RegExp(r'[\s.]'), '');
+    final isCode = RegExp(r'^\d{4,}$').hasMatch(digits);
     return [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
-        child: Text(results.isEmpty ? s.noResults : s.results(results.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-      ),
+      if (results.isEmpty && isCode)
+        _codeNotFound(app, digits)
+      else
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
+          child: Text(results.isEmpty ? s.noResults : s.results(results.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+        ),
       for (var i = 0; i < results.length; i++)
         Padding(padding: const EdgeInsets.fromLTRB(20, 0, 20, 10), child: RowTile(results[i])),
       if (results.isNotEmpty) const AdSlot(AdPlacement.resultsBanner),
       const SizedBox(height: 16),
     ];
+  }
+
+  /// A code with no line in the Syrian table: ask to drop the last two digits or more,
+  /// offer the shorter codes that do exist, and remind that only the first six digits
+  /// (HS) are international (owner 2026-10-28).
+  Widget _codeNotFound(AppState app, String digits) {
+    final s = app.s;
+    final shorter = <String>[];
+    for (var n = digits.length - 2; n >= 4; n -= 2) {
+      final c = digits.substring(0, n);
+      if (app.search(c).isNotEmpty) shorter.add(c);
+      if (shorter.length == 2) break;
+    }
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.gold)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Icon(Icons.info_outline, color: AppColors.gold, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(s.codeNotFound(digits), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 8),
+        Text(s.trimDigits, style: const TextStyle(fontSize: 13, height: 1.6)),
+        if (shorter.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final c in shorter)
+              Pressable(child: ActionChip(avatar: const Icon(Icons.search, size: 18, color: AppColors.gold), label: Text(s.tryCode(c)), onPressed: () => _setQuery(c))),
+          ]),
+        ],
+        const SizedBox(height: 10),
+        Text(s.hsWorldwide, style: const TextStyle(fontSize: 12, height: 1.6, color: AppColors.muted)),
+      ]),
+    );
   }
 }

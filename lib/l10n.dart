@@ -58,6 +58,14 @@ class S {
   List<String> get miraSuggestions => en
       ? const ['Import fees for coffee into Syria?', 'Is code 8703 on Syria\'s negative list?', 'How do I ship a container to Syria?']
       : const ['ما رسوم استيراد القهوة إلى سوريا؟', 'هل البند 8703 في القائمة السلبية السورية؟', 'كيف أشحن حاوية إلى سوريا؟'];
+  String codeNotFound(String code) => _t('البند $code غير موجود في التعرفة السورية', 'Code $code is not in the Syrian tariff');
+  String get trimDigits => _t(
+      'احذف آخر خانتين أو أكثر من الرقم لترى البنود المتاحة تحته، ثم اختر البند الأقرب لبضاعتك.',
+      'Delete the last two digits or more to see the codes available under it, then pick the one closest to your goods.');
+  String tryCode(String code) => _t('جرّب $code', 'Try $code');
+  String get hsWorldwide => _t(
+      'تذكير: أول 6 أرقام من البند (النظام المنسّق HS) عالمية وموحّدة بين الدول، أما الخانات التفصيلية بعدها فتختلف من دولة إلى أخرى. لذلك قد لا يطابق رقمٌ من بلد آخر التعرفة السورية كاملاً.',
+      'Reminder: the first 6 digits of a code (the Harmonized System, HS) are the same worldwide; the detailed digits after them differ from country to country, so a full code from another country may not match the Syrian tariff.');
   List<String> get miraCountries => en
       ? const ['Syria', 'GCC tariff (Gulf countries)']
       : const ['سوريا', 'تعرفة دول الخليج'];
