@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:http/http.dart' as http;
 
 import '../config.dart';
 import '../firebase_options.dart';
@@ -84,7 +85,25 @@ class Account extends ChangeNotifier {
       debugPrint('account: verification email: $e');
     }
     await setNewsletter(true);
+    unawaited(_sendWelcome());
     notifyListeners();
+  }
+
+  /// The thank-you email, Arabic and English, signed by the owner (owner 2026-10-28).
+  /// The platform checks the token with Google and writes only to a new account's own
+  /// address, once. Never blocks or fails the sign-up.
+  Future<void> _sendWelcome() async {
+    try {
+      final token = await user?.getIdToken();
+      if (token == null) return;
+      await http
+          .post(Uri.parse(AppConfig.welcomeApi),
+              headers: {'Content-Type': 'application/json'},
+              body: jsonEncode({'id_token': token, 'name': profile.name}))
+          .timeout(const Duration(seconds: 15));
+    } catch (e) {
+      debugPrint('account: welcome email: $e');
+    }
   }
 
   Future<void> signInWithEmail(String email, String password) =>
@@ -232,6 +251,7 @@ class Account extends ChangeNotifier {
             email: profile.email.isEmpty ? email : null,
           ));
         }
+        if (isNew) unawaited(_sendWelcome());
         notifyListeners();
       }
       return true;

@@ -2,6 +2,9 @@
 /// published file is the single source of truth (owner ruling 2026-09-15), and the
 /// app only bundles a snapshot of it so it works offline from the first launch.
 class AppConfig {
+  /// The thank-you email to a new account, sent by the MIDTRANS platform (V2).
+  static const welcomeApi = 'https://app.midtrans.net/api/v2/public/tariff-app/welcome';
+
   /// The Syrian tariff as mid-trans.com publishes it (same file MIRA reads).
   static const tariffUrl =
       'https://www.mid-trans.com/reference/syrian-hs-code-tariff/syrian-hs-code-tariff.json';
