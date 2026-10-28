@@ -1,3 +1,5 @@
+import 'data/account.dart' show SignInWay;
+
 /// Interface text in Arabic and English. Arabic is the default.
 class S {
   const S(this.lang);
@@ -66,13 +68,56 @@ class S {
   String get hsWorldwide => _t(
       'تذكير: أول 6 أرقام من البند (النظام المنسّق HS) عالمية وموحّدة بين الدول، أما الخانات التفصيلية بعدها فتختلف من دولة إلى أخرى. لذلك قد لا يطابق رقمٌ من بلد آخر التعرفة السورية كاملاً.',
       'Reminder: the first 6 digits of a code (the Harmonized System, HS) are the same worldwide; the detailed digits after them differ from country to country, so a full code from another country may not match the Syrian tariff.');
+  String get myAccount => _t('حسابي', 'My account');
+  String get signInTitle => _t('سجّل دخولك', 'Sign in');
+  String get signInWhy => _t(
+      'سجّل لتحصل على نشرة البنود الجمركية: تحديثات التعرفة والبنود المعدّلة أولاً بأول، وتحفظ ملفك وإعداداتك.',
+      'Sign in to get the tariff newsletter: tariff updates and amended codes as they come, with your profile and settings kept.');
+  String get signInSoon => _t('تسجيل الدخول غير متاح في هذه النسخة بعد.', 'Sign-in is not available in this version yet.');
+  String signInWith(SignInWay w) => switch (w) {
+        SignInWay.apple => _t('المتابعة مع Apple', 'Continue with Apple'),
+        SignInWay.google => _t('المتابعة مع Google', 'Continue with Google'),
+        SignInWay.facebook => _t('المتابعة مع Facebook', 'Continue with Facebook'),
+      };
+  String get signInPrivacy => _t(
+      'نحفظ اسمك وبريدك ورقمك (إن أضفته) واشتراكك في النشرة فقط. يمكنك حذف حسابك في أي وقت.',
+      'We keep only your name, email, phone (if you add it) and newsletter choice. You can delete your account any time.');
+  String get signInFailed => _t('تعذّر تسجيل الدخول. حاول مرة أخرى.', 'Sign-in failed. Please try again.');
+  String providerName(String id) => switch (id) {
+        'google.com' => 'Google',
+        'apple.com' => 'Apple',
+        'facebook.com' => 'Facebook',
+        _ => id,
+      };
+  String get profile => _t('الملف الشخصي', 'Profile');
+  String get nameLabel => _t('الاسم', 'Name');
+  String get phoneLabel => _t('رقم الجوال (اختياري)', 'Mobile number (optional)');
+  String get save2 => _t('حفظ', 'Save');
+  String get saved => _t('تم الحفظ.', 'Saved.');
+  String get settings => _t('الإعدادات', 'Settings');
+  String get newsletterTitle => _t('نشرة البنود الجمركية', 'Tariff newsletter');
+  String get newsletterHint => _t('إشعار عند تعديل رسوم البنود أو صدور مرسوم جديد.', 'A notification when code fees change or a new decree is issued.');
+  String get signOut => _t('تسجيل الخروج', 'Sign out');
+  String get deleteAccount => _t('حذف الحساب', 'Delete account');
+  String get deleteAccountWarn => _t('سيُحذف حسابك وملفك واشتراكك في النشرة نهائياً.', 'Your account, profile and newsletter subscription will be deleted for good.');
+  String get signInAgainToDelete => _t('لأمانك، سجّل الخروج ثم الدخول مجدداً، ثم احذف الحساب.', 'For your security, sign out and in again, then delete the account.');
+  String get cancel => _t('إلغاء', 'Cancel');
+  String get delete => _t('حذف', 'Delete');
+  String get ratesAskTitle => _t('أسعار شحن استرشادية', 'Guide freight prices');
+  String get ratesAsk => _t(
+      'هل تريد أن يظهر لك شريط بأسعار شحن الحاويات الاسترشادية من ميدترانس؟ يمكنك تغيير ذلك من الإعدادات.',
+      'Would you like a strip of MIDTRANS guide container freight prices? You can change this in settings.');
+  String get ratesYes => _t('نعم، أظهرها', 'Yes, show them');
+  String get ratesSwitch => _t('شريط أسعار الشحن', 'Freight prices strip');
+  String get ratesSwitchHint => _t('أسعار استرشادية لشحن الحاويات من ميدترانس', 'MIDTRANS guide container freight prices');
   String get ratesLabel => _t('أسعار الشحن', 'Freight');
   String rateQuestion(String container, String from, String to) => _t(
       'أريد عرض سعر شحن حاوية $container من $from إلى $to',
       'I would like a quote to ship a $container container from $from to $to');
-  List<String> get miraCountries => en
-      ? const ['Syria', 'GCC tariff (Gulf countries)']
-      : const ['سوريا', 'تعرفة دول الخليج'];
+  List<String> get miraCountries => en ? const ['Syria'] : const ['سوريا'];
+  String gulfAnswer(String url) => _t(
+      'هذا التطبيق مخصص للتعرفة الجمركية السورية. التعرفة الجمركية الخليجية الموحّدة موجودة على موقع ميدترانس: $url',
+      'This app covers the Syrian customs tariff. The unified GCC customs tariff is on the MIDTRANS website: $url');
   String askAboutCode(String code) => _t('ما رسوم البند $code في سوريا؟', 'What are the fees for code $code in Syria?');
   String get retry => _t('إعادة المحاولة', 'Retry');
   String get language => _t('English', 'العربية');

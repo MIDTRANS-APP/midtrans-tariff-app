@@ -22,8 +22,17 @@ class AppConfig {
   /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
   static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
 
+  /// The unified GCC tariff on mid-trans.com: given when someone asks about it explicitly;
+  /// the app itself is for the Syrian tariff only (owner 2026-10-28).
+  static const gccTariffAr = 'https://www.mid-trans.com/ar/gcc-customs-tariff/';
+  static const gccTariffEn = 'https://www.mid-trans.com/gcc-customs-tariff/';
+
   /// MIDTRANS team on WhatsApp (the number MIRA's page uses), offered when MIRA hands over.
   static const whatsappUrl = 'https://wa.me/963930204408';
+
+  /// Facebook sign-in shows once its Meta app (created from the owner's Meta account) is
+  /// set in Firebase › Authentication › Facebook. Google and Apple need nothing here.
+  static const facebookSignIn = false;
 
   /// The authority the figures come from (linked, never imitated).
   static const authorityUrl = 'https://website.syrianborders.gov.sy/';

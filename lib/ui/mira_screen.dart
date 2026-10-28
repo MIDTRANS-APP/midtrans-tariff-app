@@ -51,6 +51,9 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   final _lines = <_Line>[];
   final _history = <MiraTurn>[];
   bool _busy = false;
+  static final _gulf = RegExp(
+      r'(خليج|الخليجية|السعودي|السعودية|الإمارات|الامارات|الكويت|قطر|البحرين|عمان|عُمان|دبي|GCC|Gulf|Saudi|UAE|Emirates|Kuwait|Qatar|Bahrain|Oman|Dubai)',
+      caseSensitive: false);
   String? _lastQuestion;
   String? _lastCode;
 
@@ -89,6 +92,16 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     });
     _input.clear();
     _toEnd();
+    // An explicit question about the Gulf tariff gets its page on mid-trans.com; the app
+    // itself covers the Syrian tariff only (owner 2026-10-28).
+    if (code == null && _gulf.hasMatch(q)) {
+      setState(() {
+        _lines.add(_Line(false, app.s.gulfAnswer(app.lang == 'ar' ? AppConfig.gccTariffAr : AppConfig.gccTariffEn)));
+        _busy = false;
+      });
+      _toEnd();
+      return;
+    }
     try {
       final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code);
       _history

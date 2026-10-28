@@ -6,6 +6,7 @@ import '../ads/ad_slot.dart';
 import '../app_state.dart';
 import '../data/tariff_models.dart';
 import '../l10n.dart';
+import 'account_screen.dart';
 import 'category_screen.dart';
 import 'motion.dart';
 import 'rates_ticker.dart';
@@ -63,6 +64,19 @@ class _SearchScreenState extends State<SearchScreen> {
         ]),
         actions: [
           TextButton(onPressed: app.toggleLang, child: Text(s.language, style: const TextStyle(color: AppColors.text))),
+          ListenableBuilder(
+            listenable: app.account,
+            builder: (context, _) {
+              final photo = app.account.user?.photoURL;
+              return IconButton(
+                tooltip: s.myAccount,
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen())),
+                icon: photo != null
+                    ? CircleAvatar(radius: 14, backgroundImage: NetworkImage(photo))
+                    : Icon(app.account.signedIn ? Icons.account_circle : Icons.account_circle_outlined, color: AppColors.gold, size: 28),
+              );
+            },
+          ),
         ],
       ),
       // The field sits outside the list, under a fixed key: when the hero disappears on the
@@ -71,7 +85,7 @@ class _SearchScreenState extends State<SearchScreen> {
       body: !app.ready
           ? Center(child: app.loadError != null ? Text('${app.loadError}') : Text(s.loading))
           : Column(children: [
-              const RatesTicker(),
+              if (app.showRates) const RatesTicker(),
               if (_query.trim().isEmpty) _hero(s),
               Padding(
                 key: const ValueKey('search-field'),
@@ -124,6 +138,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final s = app.s;
     final recent = app.favorites.recent;
     return [
+      if (!app.ratesAsked) const RatesAskCard(),
       PushAskCard(push: app.push),
       if (recent.isNotEmpty) ...[
         GoldHeading(s.recent),
@@ -161,8 +176,8 @@ class _SearchScreenState extends State<SearchScreen> {
           ],
         ),
       ),
-      const SizedBox(height: 12),
-      const UnofficialNotice(),
+      // The unofficial notice lives in About only (owner 2026-10-28).
+      const SizedBox(height: 16),
     ];
   }
 

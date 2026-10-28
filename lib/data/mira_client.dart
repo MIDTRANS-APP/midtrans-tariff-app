@@ -43,13 +43,27 @@ class MiraClient {
     return _sessionId = id;
   }
 
+  /// The app is for the Syrian tariff only (owner 2026-10-28): every conversation opens
+  /// with this exchange, so MIRA answers about Syria and does not ask for the destination.
+  /// It goes in the history, not in the message, so MIRA's code search reads only the question.
+  static List<MiraTurn> _context(String lang) => lang == 'en'
+      ? const [
+          MiraTurn('user', 'I am using the MIDTRANS Syrian Customs Tariff app. My questions are about importing into Syria and the Syrian customs tariff only.'),
+          MiraTurn('assistant', 'Understood, I will answer about the Syrian customs tariff and importing into Syria.'),
+        ]
+      : const [
+          MiraTurn('user', 'أستخدم تطبيق التعرفة الجمركية السورية من ميدترانس. أسئلتي عن الاستيراد إلى سوريا والتعرفة الجمركية السورية فقط.'),
+          MiraTurn('assistant', 'تمام، سأجيبك عن التعرفة الجمركية السورية والاستيراد إلى سوريا.'),
+        ];
+
   /// [tariffCode] (8 digits, no dots) makes MIRA answer from the Syrian tariff for that code.
   /// Throws on network or server failure; one retry, as the web chat does.
   Future<MiraReply> ask(String message, {required String lang, List<MiraTurn> history = const [], String? tariffCode}) async {
+    final recent = history.length > 4 ? history.sublist(history.length - 4) : history;
     final body = jsonEncode({
       'message': message,
       'lang': lang,
-      'history': [for (final t in history.length > 6 ? history.sublist(history.length - 6) : history) t.toJson()],
+      'history': [for (final t in [..._context(lang), ...recent]) t.toJson()],
       if (tariffCode != null) 'tariff_card': {'code': tariffCode, 'scope': 'syria', 'on_page': true},
       'session_id': await _session(),
     });
