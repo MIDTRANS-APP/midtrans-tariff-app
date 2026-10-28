@@ -114,20 +114,38 @@ class _Profile extends StatefulWidget {
 
 class _ProfileState extends State<_Profile> {
   late final TextEditingController _name;
+  late final TextEditingController _email;
   late final TextEditingController _phone;
+  late final Account _account;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
-    final p = AppScope.of(context).account.profile;
+    // read once without subscribing: initState may not depend on inherited widgets
+    _account = context.getInheritedWidgetOfExactType<AppScope>()!.notifier!.account;
+    final p = _account.profile;
     _name = TextEditingController(text: p.name);
+    _email = TextEditingController(text: p.email);
     _phone = TextEditingController(text: p.phone);
+    _account.addListener(_fill);
+  }
+
+  /// The profile may arrive or change after the screen opens: fill empty fields and redraw
+  /// (the switches read the profile, and this page is built once by its parent).
+  void _fill() {
+    final p = _account.profile;
+    if (_name.text.isEmpty && p.name.isNotEmpty) _name.text = p.name;
+    if (_email.text.isEmpty && p.email.isNotEmpty) _email.text = p.email;
+    if (_phone.text.isEmpty && p.phone.isNotEmpty) _phone.text = p.phone;
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _account.removeListener(_fill);
     _name.dispose();
+    _email.dispose();
     _phone.dispose();
     super.dispose();
   }
@@ -135,7 +153,7 @@ class _ProfileState extends State<_Profile> {
   Future<void> _save() async {
     final app = AppScope.of(context);
     setState(() => _saving = true);
-    await app.account.updateProfile(app.account.profile.copyWith(name: _name.text.trim(), phone: _phone.text.trim()));
+    await app.account.updateProfile(app.account.profile.copyWith(name: _name.text.trim(), email: _email.text.trim(), phone: _phone.text.trim()));
     if (!mounted) return;
     setState(() => _saving = false);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(app.s.saved)));
@@ -205,6 +223,8 @@ class _ProfileState extends State<_Profile> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(children: [
           TextField(controller: _name, decoration: field(s.nameLabel, Icons.badge_outlined)),
+          const SizedBox(height: 12),
+          TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: field(s.emailLabel, Icons.alternate_email)),
           const SizedBox(height: 12),
           TextField(controller: _phone, keyboardType: TextInputType.phone, decoration: field(s.phoneLabel, Icons.phone_outlined)),
           const SizedBox(height: 12),

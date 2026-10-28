@@ -71,8 +71,8 @@ class S {
   String get myAccount => _t('حسابي', 'My account');
   String get signInTitle => _t('سجّل دخولك', 'Sign in');
   String get signInWhy => _t(
-      'سجّل لتحصل على نشرة البنود الجمركية: تحديثات التعرفة والبنود المعدّلة أولاً بأول، وتحفظ ملفك وإعداداتك.',
-      'Sign in to get the tariff newsletter: tariff updates and amended codes as they come, with your profile and settings kept.');
+      'سجّل لتحصل على نشرة البنود الجمركية: تحديثات التعرفة والبنود المعدّلة أولاً بأول، وتحفظ ملفك وإعداداتك. تُفعَّل النشرة عند التسجيل، ويمكنك إيقافها من الإعدادات.',
+      'Sign in to get the tariff newsletter: tariff updates and amended codes as they come, with your profile and settings kept. The newsletter starts on when you sign up; you can turn it off in settings.');
   String get signInSoon => _t('تسجيل الدخول غير متاح في هذه النسخة بعد.', 'Sign-in is not available in this version yet.');
   String signInWith(SignInWay w) => switch (w) {
         SignInWay.apple => _t('المتابعة مع Apple', 'Continue with Apple'),
@@ -91,6 +91,7 @@ class S {
       };
   String get profile => _t('الملف الشخصي', 'Profile');
   String get nameLabel => _t('الاسم', 'Name');
+  String get emailLabel => _t('البريد الإلكتروني', 'Email');
   String get phoneLabel => _t('رقم الجوال (اختياري)', 'Mobile number (optional)');
   String get save2 => _t('حفظ', 'Save');
   String get saved => _t('تم الحفظ.', 'Saved.');

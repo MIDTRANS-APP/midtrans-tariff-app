@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -74,12 +75,30 @@ class Account extends ChangeNotifier {
     });
   }
 
+  /// The name the sign-in way gave (Firebase does not always copy it to the user).
+  String get _providerName {
+    final names = [user!.displayName, for (final p in user!.providerData) p.displayName];
+    return names.firstWhere((n) => n != null && n.trim().isNotEmpty, orElse: () => '')!.trim();
+  }
+
+  /// True when the last [_loadProfile] created the profile (first sign-in).
+  bool _created = false;
+
   Future<void> _loadProfile() async {
-    final fallback = Profile(name: user!.displayName ?? '', email: user!.email ?? '');
+    final fallback = Profile(name: _providerName, email: user!.email ?? '');
+    _created = false;
     try {
       final snap = await _doc.get();
+      _created = !snap.exists;
       profile = snap.exists ? Profile.fromMap(snap.data()) : fallback;
-      if (!snap.exists) await _save();
+      // fill an empty name or email from the sign-in way
+      final filled = profile.copyWith(
+        name: profile.name.isEmpty ? fallback.name : null,
+        email: profile.email.isEmpty ? fallback.email : null,
+      );
+      final changed = filled.name != profile.name || filled.email != profile.email;
+      profile = filled;
+      if (!snap.exists || changed) await _save();
     } catch (e) {
       debugPrint('account: profile not loaded: $e');
       profile = fallback;
@@ -100,14 +119,42 @@ class Account extends ChangeNotifier {
   /// Returns false when the person closed the sign-in sheet; throws on other failures.
   Future<bool> signIn(SignInWay way) async {
     final provider = switch (way) {
-      SignInWay.google => GoogleAuthProvider()..setCustomParameters({'prompt': 'select_account'}),
+      SignInWay.google => GoogleAuthProvider()
+        ..addScope('profile')
+        ..addScope('email')
+        ..setCustomParameters({'prompt': 'select_account'}),
       SignInWay.apple => AppleAuthProvider()
         ..addScope('email')
         ..addScope('name'),
       SignInWay.facebook => FacebookAuthProvider()..addScope('email'),
     };
     try {
-      await _auth.signInWithProvider(provider);
+      final cred = await _auth.signInWithProvider(provider);
+      // The provider's own details carry the name and email even when Firebase leaves
+      // the user's displayName empty: copy them to the account and the profile.
+      final info = cred.additionalUserInfo?.profile ?? const {};
+      final name = [
+        info['name'],
+        [info['given_name'], info['family_name']].whereType<String>().join(' '),
+        [info['first_name'], info['last_name']].whereType<String>().join(' '),
+      ].whereType<String>().map((s) => s.trim()).firstWhere((s) => s.isNotEmpty, orElse: () => '');
+      final email = '${info['email'] ?? cred.user?.email ?? ''}'.trim();
+      final u = cred.user;
+      if (u != null && name.isNotEmpty && (u.displayName ?? '').isEmpty) await u.updateDisplayName(name);
+      if (u != null) {
+        user = u;
+        await _loadProfile();
+        // Signing up is for the newsletter (owner 2026-10-28): a new account starts with it on.
+        final isNew = _created || (cred.additionalUserInfo?.isNewUser ?? false);
+        if (isNew && !profile.newsletter) await setNewsletter(true);
+        if ((profile.name.isEmpty && name.isNotEmpty) || (profile.email.isEmpty && email.isNotEmpty)) {
+          await updateProfile(profile.copyWith(
+            name: profile.name.isEmpty ? name : null,
+            email: profile.email.isEmpty ? email : null,
+          ));
+        }
+        notifyListeners();
+      }
       return true;
     } on FirebaseAuthException catch (e) {
       if (const {'canceled', 'web-context-canceled', 'user-cancelled', 'cancelled'}.contains(e.code)) return false;
@@ -132,22 +179,29 @@ class Account extends ChangeNotifier {
     if (!signedIn) return false;
     final m = FirebaseMessaging.instance;
     if (on) {
-      final settings = await m.requestPermission();
+      final settings = await m.requestPermission().timeout(const Duration(seconds: 30));
       on = settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
     }
+    // The choice is saved first; joining the topic waits for the phone's push token,
+    // which can take a while (and never comes on a simulator), so it runs on its own.
+    await updateProfile(profile.copyWith(newsletter: on));
+    unawaited(_topics(on));
+    return on;
+  }
+
+  Future<void> _topics(bool on) async {
+    final m = FirebaseMessaging.instance;
     try {
       if (on) {
-        await m.subscribeToTopic(_topic(_lang));
+        await m.subscribeToTopic(_topic(_lang)).timeout(const Duration(minutes: 2));
       } else {
-        await m.unsubscribeFromTopic(_topic('ar'));
-        await m.unsubscribeFromTopic(_topic('en'));
+        await m.unsubscribeFromTopic(_topic('ar')).timeout(const Duration(minutes: 2));
+        await m.unsubscribeFromTopic(_topic('en')).timeout(const Duration(minutes: 2));
       }
     } catch (e) {
       debugPrint('account: newsletter topic: $e');
     }
-    await updateProfile(profile.copyWith(newsletter: on));
-    return on;
   }
 
   /// The app's language changed: the newsletter follows it.
@@ -166,11 +220,7 @@ class Account extends ChangeNotifier {
   }
 
   Future<void> signOut() async {
-    if (profile.newsletter) {
-      try {
-        await FirebaseMessaging.instance.unsubscribeFromTopic(_topic(_lang));
-      } catch (_) {}
-    }
+    if (profile.newsletter) unawaited(_topics(false));
     await _auth.signOut();
   }
 
