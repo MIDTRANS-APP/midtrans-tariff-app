@@ -91,6 +91,18 @@ class S {
       };
   String get profile => _t('الملف الشخصي', 'Profile');
   String get nameLabel => _t('الاسم', 'Name');
+  String signInName(SignInWay w) => switch (w) {
+        SignInWay.apple => 'Apple',
+        SignInWay.google => 'Google',
+        SignInWay.facebook => 'Facebook',
+      };
+  String get linkedWays => _t('طرق الدخول المرتبطة', 'Linked sign-in methods');
+  String get linkedState => _t('مرتبط بحسابك', 'Linked to your account');
+  String get notLinked => _t('غير مرتبط', 'Not linked');
+  String get link => _t('ربط', 'Link');
+  String get unlink => _t('إلغاء الربط', 'Unlink');
+  String linkedOk(String w) => _t('تم ربط $w بحسابك.', '$w is now linked to your account.');
+  String get linkTaken => _t('هذا الحساب مرتبط بحساب آخر في التطبيق.', 'That account is already used by another account in the app.');
   String get emailLabel => _t('البريد الإلكتروني', 'Email');
   String get phoneLabel => _t('رقم الجوال', 'Mobile number');
   String get passwordLabel => _t('كلمة المرور', 'Password');

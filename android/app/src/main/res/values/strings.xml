@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Syrian Tariff · MIDTRANS</string>
+    <!-- Facebook sign-in: Meta app 1089754473832330 (public ids shipped in the app). -->
+    <string name="facebook_app_id" translatable="false">1089754473832330</string>
+    <string name="facebook_client_token" translatable="false">dfe01321e27c15241b2a47dcc192571a</string>
 </resources>

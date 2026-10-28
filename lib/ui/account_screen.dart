@@ -113,23 +113,121 @@ class _WayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Apple's button is black or white by its rules; the others follow the app.
-    final (bg, fg, icon) = switch (way) {
-      SignInWay.apple => (Colors.white, Colors.black, Icons.apple),
-      SignInWay.google => (AppColors.surface, AppColors.text, Icons.g_mobiledata),
-      SignInWay.facebook => (const Color(0xFF1877F2), Colors.white, Icons.facebook),
+    // Each button in its brand's own look: Apple white/black, Google white with the
+    // four-colour G and a grey border (owner 2026-10-28), Facebook blue.
+    final (bg, fg) = switch (way) {
+      SignInWay.apple => (Colors.white, Colors.black),
+      SignInWay.google => (Colors.white, const Color(0xFF1F1F1F)),
+      SignInWay.facebook => (const Color(0xFF1877F2), Colors.white),
     };
+    final Widget icon = busy
+        ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: fg))
+        : switch (way) {
+            SignInWay.apple => const Icon(Icons.apple, size: 26),
+            SignInWay.google => const GoogleLogo(size: 22),
+            SignInWay.facebook => const Icon(Icons.facebook, size: 26),
+          };
     return FilledButton.icon(
       style: FilledButton.styleFrom(
         backgroundColor: bg,
         foregroundColor: fg,
         minimumSize: const Size.fromHeight(52),
-        side: way == SignInWay.google ? const BorderSide(color: AppColors.line) : null,
+        side: way == SignInWay.google ? const BorderSide(color: Color(0xFF747775)) : null,
       ),
       onPressed: onPressed,
-      icon: busy ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: fg)) : Icon(icon, size: 26),
+      icon: icon,
       label: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
     );
+  }
+}
+
+/// Google's "G" in its four colours, drawn so the app needs no image file.
+class GoogleLogo extends StatelessWidget {
+  const GoogleLogo({super.key, this.size = 22});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(width: size, height: size, child: CustomPaint(painter: _GPainter()));
+}
+
+class _GPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final stroke = s * 0.2;
+    final rect = Rect.fromLTWH(stroke / 2, stroke / 2, s - stroke, s - stroke);
+    Paint p(int c) => Paint()
+      ..color = Color(c)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    const d = 3.14159265 / 180;
+    canvas.drawArc(rect, -40 * d, -60 * d, false, p(0xFFEA4335)); // red, top
+    canvas.drawArc(rect, -100 * d, -95 * d, false, p(0xFFFBBC05)); // yellow, left top
+    canvas.drawArc(rect, 165 * d, -95 * d, false, p(0xFF34A853)); // green, bottom
+    canvas.drawArc(rect, 70 * d, -70 * d, false, p(0xFF4285F4)); // blue, right
+    canvas.drawRect(Rect.fromLTWH(s * 0.5, s * 0.5 - stroke / 2, s * 0.5 - stroke / 2, stroke), Paint()..color = const Color(0xFF4285F4));
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// «طرق الدخول المرتبطة»: link Apple, Google or Facebook to the same account, or unlink one
+/// while another remains (owner 2026-10-28).
+class _LinkedWays extends StatefulWidget {
+  const _LinkedWays();
+
+  @override
+  State<_LinkedWays> createState() => _LinkedWaysState();
+}
+
+class _LinkedWaysState extends State<_LinkedWays> {
+  SignInWay? _busy;
+
+  Future<void> _toggle(SignInWay w) async {
+    final app = AppScope.of(context);
+    final acc = app.account;
+    final s = app.s;
+    setState(() => _busy = w);
+    try {
+      if (acc.isLinked(w)) {
+        await acc.unlink(w);
+      } else if (await acc.link(w) && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.linkedOk(s.signInName(w)))));
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.code == 'credential-already-in-use' || e.code == 'email-already-in-use' ? s.linkTaken : s.authError(e.code))));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final acc = app.account;
+    final s = app.s;
+    return Column(children: [
+      for (final w in Account.ways)
+        ListTile(
+          leading: switch (w) {
+            SignInWay.apple => const Icon(Icons.apple, color: AppColors.text, size: 26),
+            SignInWay.google => const GoogleLogo(size: 22),
+            SignInWay.facebook => const Icon(Icons.facebook, color: Color(0xFF1877F2), size: 26),
+          },
+          title: Text(s.signInName(w)),
+          subtitle: Text(acc.isLinked(w) ? s.linkedState : s.notLinked, style: TextStyle(fontSize: 12, color: acc.isLinked(w) ? AppColors.goldText : AppColors.muted)),
+          trailing: _busy == w
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              : acc.isLinked(w)
+                  ? (acc.linked.length > 1
+                      ? TextButton(onPressed: _busy == null ? () => _toggle(w) : null, child: Text(s.unlink, style: const TextStyle(color: AppColors.muted)))
+                      : const Icon(Icons.check_circle, color: AppColors.gold))
+                  : OutlinedButton(onPressed: _busy == null ? () => _toggle(w) : null, child: Text(s.link)),
+        ),
+    ]);
   }
 }
 
@@ -283,6 +381,8 @@ class _ProfileState extends State<_Profile> {
         ]),
         ),
       ),
+      GoldHeading(s.linkedWays),
+      const _LinkedWays(),
       GoldHeading(s.settings),
       SwitchListTile(
         title: Text(s.newsletterTitle),

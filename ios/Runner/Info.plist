@@ -20,7 +20,7 @@
 		<string>en</string>
 	</array>
 	<key>CFBundleName</key>
-	<string>midtrans_tariff</string>
+	<string>Syrian Tariff</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -35,13 +35,25 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>app-1-681262761995-ios-07d1a9929f0b94658f9f0e</string>
+				<string>fb1089754473832330</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FacebookAppID</key>
+	<string>1089754473832330</string>
+	<key>FacebookClientToken</key>
+	<string>dfe01321e27c15241b2a47dcc192571a</string>
+	<key>FacebookDisplayName</key>
+	<string>Syrian Customs Tariff</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>fb-messenger-share-api</string>
+		<string>fbapi</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

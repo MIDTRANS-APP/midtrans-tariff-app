@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 import '../config.dart';
 import '../firebase_options.dart';
@@ -155,19 +159,56 @@ class Account extends ChangeNotifier {
   // ---- sign-in ------------------------------------------------------------
 
   /// Returns false when the person closed the sign-in sheet; throws on other failures.
+  static AuthProvider _provider(SignInWay way) => switch (way) {
+        SignInWay.google => GoogleAuthProvider()
+          ..addScope('profile')
+          ..addScope('email')
+          ..setCustomParameters({'prompt': 'select_account'}),
+        SignInWay.apple => AppleAuthProvider()
+          ..addScope('email')
+          ..addScope('name'),
+        SignInWay.facebook => FacebookAuthProvider()
+          ..addScope('email')
+          ..addScope('public_profile'),
+      };
+
+  static String providerId(SignInWay way) => switch (way) {
+        SignInWay.google => 'google.com',
+        SignInWay.apple => 'apple.com',
+        SignInWay.facebook => 'facebook.com',
+      };
+
+  /// Facebook's terms require its own SDK: Firebase refuses Facebook through the generic
+  /// provider (it crashes the app on iPhone). On iPhone the SDK gives a Limited Login
+  /// token checked with a nonce; on Android a classic access token. Null when closed.
+  Future<AuthCredential?> _facebookCredential() async {
+    final fb = FacebookAuth.instance;
+    if (!kIsWeb && Platform.isIOS) {
+      final r = Random.secure();
+      final raw = base64Url.encode(List.generate(32, (_) => r.nextInt(256))).replaceAll('=', '');
+      final res = await fb.login(
+        permissions: const ['email', 'public_profile'],
+        loginTracking: LoginTracking.limited,
+        nonce: sha256.convert(utf8.encode(raw)).toString(),
+      );
+      if (res.status != LoginStatus.success || res.accessToken == null) return null;
+      return OAuthProvider('facebook.com').credential(idToken: res.accessToken!.tokenString, rawNonce: raw);
+    }
+    final res = await fb.login(permissions: const ['email', 'public_profile']);
+    if (res.status != LoginStatus.success || res.accessToken == null) return null;
+    return FacebookAuthProvider.credential(res.accessToken!.tokenString);
+  }
+
   Future<bool> signIn(SignInWay way) async {
-    final provider = switch (way) {
-      SignInWay.google => GoogleAuthProvider()
-        ..addScope('profile')
-        ..addScope('email')
-        ..setCustomParameters({'prompt': 'select_account'}),
-      SignInWay.apple => AppleAuthProvider()
-        ..addScope('email')
-        ..addScope('name'),
-      SignInWay.facebook => FacebookAuthProvider()..addScope('email'),
-    };
     try {
-      final cred = await _auth.signInWithProvider(provider);
+      final UserCredential cred;
+      if (way == SignInWay.facebook) {
+        final c = await _facebookCredential();
+        if (c == null) return false;
+        cred = await _auth.signInWithCredential(c);
+      } else {
+        cred = await _auth.signInWithProvider(_provider(way));
+      }
       // The provider's own details carry the name and email even when Firebase leaves
       // the user's displayName empty: copy them to the account and the profile.
       final info = cred.additionalUserInfo?.profile ?? const {};
@@ -202,6 +243,43 @@ class Account extends ChangeNotifier {
 
   /// Sign-in ways linked to this account (google.com, apple.com, facebook.com).
   List<String> get linked => [for (final p in user?.providerData ?? const <UserInfo>[]) p.providerId];
+
+  bool isLinked(SignInWay way) => linked.contains(providerId(way));
+
+  /// Adds another sign-in way to this same account (owner 2026-10-28: link the other
+  /// accounts from settings). False when the person closed the sheet. Throws
+  /// `credential-already-in-use` when that Google/Apple/Facebook account belongs to
+  /// another account here.
+  Future<bool> link(SignInWay way) async {
+    final u = user;
+    if (u == null) return false;
+    try {
+      if (way == SignInWay.facebook) {
+        final c = await _facebookCredential();
+        if (c == null) return false;
+        await u.linkWithCredential(c);
+      } else {
+        await u.linkWithProvider(_provider(way));
+      }
+      await u.reload();
+      user = _auth.currentUser;
+      notifyListeners();
+      return true;
+    } on FirebaseAuthException catch (e) {
+      if (const {'canceled', 'web-context-canceled', 'user-cancelled', 'cancelled'}.contains(e.code)) return false;
+      rethrow;
+    }
+  }
+
+  /// Removes a sign-in way; the last one is kept so the account can still be opened.
+  Future<void> unlink(SignInWay way) async {
+    final u = user;
+    if (u == null || linked.length < 2) return;
+    await u.unlink(providerId(way));
+    await u.reload();
+    user = _auth.currentUser;
+    notifyListeners();
+  }
 
   // ---- profile and settings -----------------------------------------------
 
