@@ -84,8 +84,14 @@ class Account extends ChangeNotifier {
     } catch (e) {
       debugPrint('account: verification email: $e');
     }
-    await setNewsletter(true);
+    // The thank-you email first: the newsletter below waits for the notification
+    // prompt, and a prompt left unanswered must not cost the letter.
     unawaited(_sendWelcome());
+    try {
+      await setNewsletter(true);
+    } catch (e) {
+      debugPrint('account: newsletter at sign-up: $e');
+    }
     notifyListeners();
   }
 
@@ -244,6 +250,7 @@ class Account extends ChangeNotifier {
         await _loadProfile();
         // Signing up is for the newsletter (owner 2026-10-28): a new account starts with it on.
         final isNew = _created || (cred.additionalUserInfo?.isNewUser ?? false);
+        if (isNew) unawaited(_sendWelcome());
         if (isNew && !profile.newsletter) await setNewsletter(true);
         if ((profile.name.isEmpty && name.isNotEmpty) || (profile.email.isEmpty && email.isNotEmpty)) {
           await updateProfile(profile.copyWith(
@@ -251,7 +258,6 @@ class Account extends ChangeNotifier {
             email: profile.email.isEmpty ? email : null,
           ));
         }
-        if (isNew) unawaited(_sendWelcome());
         notifyListeners();
       }
       return true;
