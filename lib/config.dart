@@ -14,6 +14,14 @@ class AppConfig {
   /// so the app opens it as is (owner 2026-10-22: no change to MIRA or the website).
   static const miraUrl = 'https://chat.midtrans.org/';
 
+  /// MIRA's brain, called by the app's own chat screen (owner 2026-10-28: MIRA in the
+  /// app's design). Requests carry [miraOrigin], the origin MIRA's server already allows.
+  static const miraApi = 'https://api.midtrans.org/api/v1/chat/ask';
+  static const miraOrigin = 'https://chat.midtrans.org';
+
+  /// MIDTRANS team on WhatsApp (the number MIRA's page uses), offered when MIRA hands over.
+  static const whatsappUrl = 'https://wa.me/963930204408';
+
   /// The authority the figures come from (linked, never imitated).
   static const authorityUrl = 'https://website.syrianborders.gov.sy/';
 

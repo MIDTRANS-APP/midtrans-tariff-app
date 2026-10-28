@@ -46,6 +46,22 @@ class S {
   String get fromBundle => _t('نسخة مضمّنة في التطبيق', 'Copy bundled in the app');
   String get fromCache => _t('آخر نسخة من موقع ميدترانس', 'Latest copy from mid-trans.com');
   String get miraOffline => _t('ميرا تحتاج اتصالاً بالإنترنت. البحث في التعرفة يعمل بدونه.', 'MIRA needs an internet connection. Tariff search works without it.');
+  String get miraSubtitle => _t('مساعدة ميدترانس · ذكاء اصطناعي', 'MIDTRANS assistant · AI');
+  String get miraHello => _t(
+      'أهلاً، أنا ميرا من ميدترانس. اسألني عن أي بند في التعرفة السورية، أو عن شحن بضاعتك.',
+      'Hi, I am MIRA from MIDTRANS. Ask me about any code in the Syrian tariff, or about shipping your goods.');
+  String get miraHint => _t('اكتب سؤالك…', 'Type your question…');
+  String get miraThinking => _t('ميرا تكتب…', 'MIRA is typing…');
+  String get miraNew => _t('محادثة جديدة', 'New chat');
+  String get miraTeam => _t('تحدّث مع فريق ميدترانس على واتساب', 'Talk to the MIDTRANS team on WhatsApp');
+  String get miraNote => _t('إجابات ميرا للاسترشاد، والرسوم النهائية تؤكدها الجمارك.', 'MIRA\'s answers are guidance; final fees are confirmed by customs.');
+  List<String> get miraSuggestions => en
+      ? const ['Import fees for coffee into Syria?', 'Is code 8703 on Syria\'s negative list?', 'How do I ship a container to Syria?']
+      : const ['ما رسوم استيراد القهوة إلى سوريا؟', 'هل البند 8703 في القائمة السلبية السورية؟', 'كيف أشحن حاوية إلى سوريا؟'];
+  List<String> get miraCountries => en
+      ? const ['Syria', 'GCC tariff (Gulf countries)']
+      : const ['سوريا', 'تعرفة دول الخليج'];
+  String askAboutCode(String code) => _t('ما رسوم البند $code في سوريا؟', 'What are the fees for code $code in Syria?');
   String get retry => _t('إعادة المحاولة', 'Retry');
   String get language => _t('English', 'العربية');
   String get privacy => _t('سياسة الخصوصية', 'Privacy policy');

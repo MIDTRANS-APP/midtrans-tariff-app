@@ -64,32 +64,38 @@ class _SearchScreenState extends State<SearchScreen> {
           TextButton(onPressed: app.toggleLang, child: Text(s.language, style: const TextStyle(color: AppColors.text))),
         ],
       ),
+      // The field sits outside the list, under a fixed key: when the hero disappears on the
+      // first letter the list's children shift, and a field inside it was rebuilt as a new
+      // one, losing focus and closing the keyboard after every letter.
       body: !app.ready
           ? Center(child: app.loadError != null ? Text('${app.loadError}') : Text(s.loading))
-          : ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              children: [
-                if (_query.trim().isEmpty) _hero(s),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: TextField(
-                    controller: _controller,
-                    onChanged: _onChanged,
-                    onSubmitted: (v) => app.favorites.addRecent(v),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      labelText: s.searchLabel,
-                      hintText: s.searchHint,
-                      prefixIcon: const Icon(Icons.search, color: AppColors.gold),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(tooltip: MaterialLocalizations.of(context).deleteButtonTooltip, icon: const Icon(Icons.close), onPressed: () => _setQuery('')),
-                    ),
+          : Column(children: [
+              if (_query.trim().isEmpty) _hero(s),
+              Padding(
+                key: const ValueKey('search-field'),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: TextField(
+                  controller: _controller,
+                  onChanged: _onChanged,
+                  onSubmitted: (v) => app.favorites.addRecent(v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: s.searchLabel,
+                    hintText: s.searchHint,
+                    prefixIcon: const Icon(Icons.search, color: AppColors.gold),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(tooltip: MaterialLocalizations.of(context).deleteButtonTooltip, icon: const Icon(Icons.close), onPressed: () => _setQuery('')),
                   ),
                 ),
-                if (_query.trim().isEmpty) ..._home(app) else ..._results(app, results),
-              ],
-            ),
+              ),
+              Expanded(
+                child: ListView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  children: [if (_query.trim().isEmpty) ..._home(app) else ..._results(app, results)],
+                ),
+              ),
+            ]),
     );
   }
 
