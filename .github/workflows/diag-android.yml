@@ -1,0 +1,42 @@
+name: Diag Android sign-in
+on:
+  push:
+    branches: [diag/android-signin]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: The store APK of release run 7 (versionCode 70)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 40764004995 --repo ${{ github.repository }} -n store-android -D apk && ls -la apk/flutter-apk
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: |
+            adb install -r apk/flutter-apk/app-release.apk
+            adb logcat -c
+            adb shell am start -n com.midtrans.syriantariff/com.midtrans.midtrans_tariff.MainActivity
+            sleep 45
+            adb logcat -d > logcat.txt || true
+            grep -iE "flutter|firebase|AndroidRuntime|FATAL|Exception" logcat.txt | tail -150 || true
+            adb exec-out screencap -p > screen.png || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diag
+          path: |
+            logcat.txt
+            screen.png
