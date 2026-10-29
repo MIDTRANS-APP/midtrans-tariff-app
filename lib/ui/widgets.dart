@@ -101,6 +101,37 @@ class UnofficialNotice extends StatelessWidget {
   }
 }
 
+/// Asks once, on first launch, whether the person wants guide freight prices shown as a
+/// strip on the home screen. Off unless they say yes; switchable in settings (owner 2026-10-28).
+class RatesAskCard extends StatelessWidget {
+  const RatesAskCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final app = AppScope.of(context);
+    final s = app.s;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.gold)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Icon(Icons.directions_boat_outlined, color: AppColors.gold, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(s.ratesAskTitle, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 6),
+        Text(s.ratesAsk, style: const TextStyle(fontSize: 13, height: 1.6, color: AppColors.muted)),
+        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+          TextButton(onPressed: () => app.setShowRates(false), child: Text(s.pushNo, style: const TextStyle(color: AppColors.muted))),
+          const SizedBox(width: 4),
+          Pressable(child: FilledButton(onPressed: () => app.setShowRates(true), child: Text(s.ratesYes))),
+        ]),
+      ]),
+    );
+  }
+}
+
 /// Asks once whether the person wants notifications (tariff updates, MIDTRANS
 /// offers). Nothing is enabled without a yes; the answer can be changed in About.
 class PushAskCard extends StatelessWidget {

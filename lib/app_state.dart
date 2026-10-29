@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'data/account.dart';
 import 'data/favorites.dart';
 import 'data/push.dart';
 import 'data/search.dart';
@@ -16,6 +17,7 @@ class AppState extends ChangeNotifier {
   final TariffRepository repository;
   final favorites = Favorites();
   final push = Push();
+  final account = Account();
 
   TariffData? data;
   TariffSearch? _search;
@@ -23,14 +25,31 @@ class AppState extends ChangeNotifier {
   String lang = 'ar';
   Object? loadError;
 
+  /// The freight prices strip: off until the person says yes, asked once on first
+  /// launch, switchable in settings (owner 2026-10-28).
+  bool showRates = false;
+  bool ratesAsked = false;
+
   S get s => S(lang);
   bool get ready => data != null;
+
+  Future<void> setShowRates(bool on) async {
+    showRates = on;
+    ratesAsked = true;
+    notifyListeners();
+    final p = await SharedPreferences.getInstance();
+    await p.setBool('show_rates', on);
+    await p.setBool('rates_asked', true);
+  }
 
   Future<void> start() async {
     final prefs = await SharedPreferences.getInstance();
     lang = prefs.getString('lang') ?? 'ar';
+    showRates = prefs.getBool('show_rates') ?? false;
+    ratesAsked = prefs.getBool('rates_asked') ?? false;
     await favorites.load();
     unawaited(push.start(lang));
+    unawaited(account.start(lang));
     try {
       _use(await repository.loadLocal());
     } catch (e) {
@@ -67,6 +86,7 @@ class AppState extends ChangeNotifier {
     lang = lang == 'ar' ? 'en' : 'ar';
     notifyListeners();
     unawaited(push.setLang(lang));
+    unawaited(account.setLang(lang));
     await (await SharedPreferences.getInstance()).setString('lang', lang);
   }
 }

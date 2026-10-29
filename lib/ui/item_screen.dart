@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../ads/ad_slot.dart';
 import '../app_state.dart';
-import '../config.dart';
 import '../data/fee_text.dart';
 import 'mira_screen.dart';
+import 'share_card.dart';
 import 'motion.dart';
 import 'theme.dart';
 import 'widgets.dart';
@@ -27,13 +26,9 @@ class ItemScreen extends StatelessWidget {
     final other = lang == 'ar' ? row.text('description', 'en') : row.text('description', 'ar');
     final saved = app.favorites.contains(row.code);
 
-    Future<void> openMira() async {
-      // MIRA's page is opened as is; the code is put on the clipboard to paste there.
-      await Clipboard.setData(ClipboardData(text: row.code));
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s.copied(row.code))));
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MiraScreen(standalone: true)));
-    }
+    // MIRA opens asking about this code, with its tariff card so it answers from the Syrian tariff.
+    void openMira() => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => MiraScreen(standalone: true, code: row.code, displayCode: row.displayCode)));
 
     return Scaffold(
       appBar: AppBar(
@@ -47,9 +42,7 @@ class ItemScreen extends StatelessWidget {
           IconButton(
             tooltip: s.share,
             icon: const Icon(Icons.share_outlined),
-            onPressed: () => SharePlus.instance.share(ShareParams(
-              text: '${row.displayCode} — ${row.description(lang)}\n${fees.headline}\n${lang == 'ar' ? AppConfig.tariffPageAr : AppConfig.tariffPageEn}',
-            )),
+            onPressed: () => shareCodeCard(context, row),
           ),
         ],
       ),
@@ -118,10 +111,15 @@ class ItemScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Pressable(
             child: Shine(
-              child: FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.midtransBlue, foregroundColor: Colors.white, minimumSize: const Size.fromHeight(52)),
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: AppColors.ground,
+                  minimumSize: const Size.fromHeight(52),
+                ),
                 onPressed: openMira,
-                child: Text(s.askMira, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                icon: const Icon(Icons.auto_awesome, size: 20),
+                label: Text(s.askMira, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
               ),
             ),
           ),

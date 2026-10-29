@@ -12,8 +12,7 @@ class AppColors {
   static const goldText = Color(0xFFD9C9A0);
   static const text = Color(0xFFE8ECEB);
   static const muted = Color(0xFFA9B8B5);
-  static const midtransBlue = Color(0xFF007DC5);
-  static const warn = Color(0xFFE9B872);
+  static const midtransBlue = Color(0xFF007DC5);  static const warn = Color(0xFFE9B872);
 }
 
 ThemeData buildTheme() {

@@ -66,6 +66,12 @@ class _AboutScreenState extends State<AboutScreen> {
         link(s.authority, AppConfig.authorityUrl),
         link(s.privacy, AppConfig.privacyUrl),
         ListTile(title: Text(s.language), trailing: const Icon(Icons.translate), onTap: app.toggleLang),
+        SwitchListTile(
+          title: Text(s.ratesSwitch),
+          subtitle: Text(s.ratesSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
+          value: app.showRates,
+          onChanged: app.setShowRates,
+        ),
         ListenableBuilder(
           listenable: app.push,
           builder: (context, _) => !app.push.available

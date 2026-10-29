@@ -6,8 +6,10 @@ import '../ads/ad_slot.dart';
 import '../app_state.dart';
 import '../data/tariff_models.dart';
 import '../l10n.dart';
+import 'account_screen.dart';
 import 'category_screen.dart';
 import 'motion.dart';
+import 'rates_ticker.dart';
 import 'theme.dart';
 import 'widgets.dart';
 
@@ -62,34 +64,54 @@ class _SearchScreenState extends State<SearchScreen> {
         ]),
         actions: [
           TextButton(onPressed: app.toggleLang, child: Text(s.language, style: const TextStyle(color: AppColors.text))),
+          ListenableBuilder(
+            listenable: app.account,
+            builder: (context, _) {
+              final photo = app.account.user?.photoURL;
+              return IconButton(
+                tooltip: s.myAccount,
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen())),
+                icon: photo != null
+                    ? CircleAvatar(radius: 14, backgroundImage: NetworkImage(photo))
+                    : Icon(app.account.signedIn ? Icons.account_circle : Icons.account_circle_outlined, color: AppColors.gold, size: 28),
+              );
+            },
+          ),
         ],
       ),
+      // The field sits outside the list, under a fixed key: when the hero disappears on the
+      // first letter the list's children shift, and a field inside it was rebuilt as a new
+      // one, losing focus and closing the keyboard after every letter.
       body: !app.ready
           ? Center(child: app.loadError != null ? Text('${app.loadError}') : Text(s.loading))
-          : ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              children: [
-                if (_query.trim().isEmpty) _hero(s),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-                  child: TextField(
-                    controller: _controller,
-                    onChanged: _onChanged,
-                    onSubmitted: (v) => app.favorites.addRecent(v),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      labelText: s.searchLabel,
-                      hintText: s.searchHint,
-                      prefixIcon: const Icon(Icons.search, color: AppColors.gold),
-                      suffixIcon: _query.isEmpty
-                          ? null
-                          : IconButton(tooltip: MaterialLocalizations.of(context).deleteButtonTooltip, icon: const Icon(Icons.close), onPressed: () => _setQuery('')),
-                    ),
+          : Column(children: [
+              if (app.showRates) const RatesTicker(),
+              if (_query.trim().isEmpty) _hero(s),
+              Padding(
+                key: const ValueKey('search-field'),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+                child: TextField(
+                  controller: _controller,
+                  onChanged: _onChanged,
+                  onSubmitted: (v) => app.favorites.addRecent(v),
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    labelText: s.searchLabel,
+                    hintText: s.searchHint,
+                    prefixIcon: const Icon(Icons.search, color: AppColors.gold),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(tooltip: MaterialLocalizations.of(context).deleteButtonTooltip, icon: const Icon(Icons.close), onPressed: () => _setQuery('')),
                   ),
                 ),
-                if (_query.trim().isEmpty) ..._home(app) else ..._results(app, results),
-              ],
-            ),
+              ),
+              Expanded(
+                child: ListView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  children: [if (_query.trim().isEmpty) ..._home(app) else ..._results(app, results)],
+                ),
+              ),
+            ]),
     );
   }
 
@@ -116,6 +138,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final s = app.s;
     final recent = app.favorites.recent;
     return [
+      if (!app.ratesAsked) const RatesAskCard(),
       PushAskCard(push: app.push),
       if (recent.isNotEmpty) ...[
         GoldHeading(s.recent),
@@ -153,22 +176,63 @@ class _SearchScreenState extends State<SearchScreen> {
           ],
         ),
       ),
-      const SizedBox(height: 12),
-      const UnofficialNotice(),
+      // The unofficial notice lives in About only (owner 2026-10-28).
+      const SizedBox(height: 16),
     ];
   }
 
   List<Widget> _results(AppState app, List<TariffRow> results) {
     final s = app.s;
+    final digits = _query.replaceAll(RegExp(r'[\s.]'), '');
+    final isCode = RegExp(r'^\d{4,}$').hasMatch(digits);
     return [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
-        child: Text(results.isEmpty ? s.noResults : s.results(results.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-      ),
+      if (results.isEmpty && isCode)
+        _codeNotFound(app, digits)
+      else
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
+          child: Text(results.isEmpty ? s.noResults : s.results(results.length), style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+        ),
       for (var i = 0; i < results.length; i++)
         Padding(padding: const EdgeInsets.fromLTRB(20, 0, 20, 10), child: RowTile(results[i])),
       if (results.isNotEmpty) const AdSlot(AdPlacement.resultsBanner),
       const SizedBox(height: 16),
     ];
+  }
+
+  /// A code with no line in the Syrian table: ask to drop the last two digits or more,
+  /// offer the shorter codes that do exist, and remind that only the first six digits
+  /// (HS) are international (owner 2026-10-28).
+  Widget _codeNotFound(AppState app, String digits) {
+    final s = app.s;
+    final shorter = <String>[];
+    for (var n = digits.length - 2; n >= 4; n -= 2) {
+      final c = digits.substring(0, n);
+      if (app.search(c).isNotEmpty) shorter.add(c);
+      if (shorter.length == 2) break;
+    }
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.gold)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Row(children: [
+          const Icon(Icons.info_outline, color: AppColors.gold, size: 20),
+          const SizedBox(width: 8),
+          Expanded(child: Text(s.codeNotFound(digits), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+        ]),
+        const SizedBox(height: 8),
+        Text(s.trimDigits, style: const TextStyle(fontSize: 13, height: 1.6)),
+        if (shorter.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final c in shorter)
+              Pressable(child: ActionChip(avatar: const Icon(Icons.search, size: 18, color: AppColors.gold), label: Text(s.tryCode(c)), onPressed: () => _setQuery(c))),
+          ]),
+        ],
+        const SizedBox(height: 10),
+        Text(s.hsWorldwide, style: const TextStyle(fontSize: 12, height: 1.6, color: AppColors.muted)),
+      ]),
+    );
   }
 }

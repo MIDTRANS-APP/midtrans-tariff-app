@@ -1,4 +1,3 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,15 +29,8 @@ class Push extends ChangeNotifier {
     final p = await SharedPreferences.getInstance();
     enabled = p.getBool(_enabledKey) ?? false;
     asked = p.getBool(_askedKey) ?? false;
-    final options = firebaseOptions;
-    if (options == null) return;
-    try {
-      await Firebase.initializeApp(options: options);
-      available = true;
-    } catch (e) {
-      debugPrint('push: Firebase not started: $e');
-      return;
-    }
+    if (!await ensureFirebase()) return;
+    available = true;
     FirebaseMessaging.onMessage.listen((m) {
       final n = m.notification;
       if (n != null) onForeground?.call(n.title ?? '', n.body ?? '');

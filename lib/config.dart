@@ -2,6 +2,9 @@
 /// published file is the single source of truth (owner ruling 2026-09-15), and the
 /// app only bundles a snapshot of it so it works offline from the first launch.
 class AppConfig {
+  /// The thank-you email to a new account, sent by the MIDTRANS platform (V2).
+  static const welcomeApi = 'https://app.midtrans.net/api/v2/public/tariff-app/welcome';
+
   /// The Syrian tariff as mid-trans.com publishes it (same file MIRA reads).
   static const tariffUrl =
       'https://www.mid-trans.com/reference/syrian-hs-code-tariff/syrian-hs-code-tariff.json';
@@ -13,6 +16,30 @@ class AppConfig {
   /// MIRA's existing standalone chat page. Its origin is already allowed by MIRA,
   /// so the app opens it as is (owner 2026-10-22: no change to MIRA or the website).
   static const miraUrl = 'https://chat.midtrans.org/';
+
+  /// MIRA's brain, called by the app's own chat screen (owner 2026-10-28: MIRA in the
+  /// app's design). Requests carry [miraOrigin], the origin MIRA's server already allows.
+  static const miraApi = 'https://api.midtrans.org/api/v1/chat/ask';
+  static const miraOrigin = 'https://chat.midtrans.org';
+
+  /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
+  static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
+
+  /// The unified GCC tariff on mid-trans.com: given when someone asks about it explicitly;
+  /// the app itself is for the Syrian tariff only (owner 2026-10-28).
+  static const gccTariffAr = 'https://www.mid-trans.com/ar/gcc-customs-tariff/';
+  static const gccTariffEn = 'https://www.mid-trans.com/gcc-customs-tariff/';
+
+  /// MIDTRANS team on WhatsApp (the number MIRA's page uses), offered when MIRA hands over.
+  static const whatsappUrl = 'https://wa.me/963930204408';
+
+  /// Facebook sign-in shows once its Meta app (created from the owner's Meta account) is
+  /// set in Firebase › Authentication › Facebook. Google and Apple need nothing here.
+  static const facebookSignIn = true;
+
+  /// Sign in with Apple on Android and Huawei (owner 2026-10-29: «عالج الكل»). Needs the
+  /// Apple provider's OAuth code flow (team, key ID, private key) filled in Firebase.
+  static const appleSignInAndroid = true; // Meta app 1089754473832330 "Syrian Customs Tariff"
 
   /// The authority the figures come from (linked, never imitated).
   static const authorityUrl = 'https://website.syrianborders.gov.sy/';
