@@ -33,6 +33,14 @@ jobs:
             adb logcat -d > logcat.txt || true
             grep -iE "flutter|firebase|AndroidRuntime|FATAL|Exception" logcat.txt | tail -150 || true
             adb exec-out screencap -p > screen.png || true
+            S=$(adb shell wm size | grep -oE '[0-9]+x[0-9]+' | tail -1); W=${S%x*}; H=${S#*x}
+            adb shell input tap $((W*24/320)) $((H*52/640))
+            sleep 6
+            adb exec-out screencap -p > account.png || true
+            adb shell input swipe $((W/2)) $((H*3/4)) $((W/2)) $((H/4)) 400
+            sleep 2
+            adb exec-out screencap -p > account2.png || true
+            adb logcat -d | grep -iE " flutter|FirebaseAuth|Firebase not started" | tail -40 || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -40,3 +48,5 @@ jobs:
           path: |
             logcat.txt
             screen.png
+            account.png
+            account2.png
