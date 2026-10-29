@@ -35,7 +35,11 @@ class AppConfig {
 
   /// Facebook sign-in shows once its Meta app (created from the owner's Meta account) is
   /// set in Firebase › Authentication › Facebook. Google and Apple need nothing here.
-  static const facebookSignIn = true; // Meta app 1089754473832330 "Syrian Customs Tariff"
+  static const facebookSignIn = true;
+
+  /// Sign in with Apple on Android and Huawei (owner 2026-10-29: «عالج الكل»). Needs the
+  /// Apple provider's OAuth code flow (team, key ID, private key) filled in Firebase.
+  static const appleSignInAndroid = true; // Meta app 1089754473832330 "Syrian Customs Tariff"
 
   /// The authority the figures come from (linked, never imitated).
   static const authorityUrl = 'https://website.syrianborders.gov.sy/';

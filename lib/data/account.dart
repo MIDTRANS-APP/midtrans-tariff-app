@@ -117,13 +117,19 @@ class Account extends ChangeNotifier {
 
   Future<void> resetPassword(String email) => _auth.sendPasswordResetEmail(email: email.trim());
 
-  /// Apple on iPhone (Apple's rule when other sign-in is offered); Google always;
+  /// Apple first on iPhone (Apple's rule when other sign-in is offered); Google always;
   /// Facebook once its Meta app is set up in Firebase ([AppConfig.facebookSignIn]).
-  static List<SignInWay> get ways => [
-        if (!kIsWeb && Platform.isIOS) SignInWay.apple,
-        SignInWay.google,
-        if (AppConfig.facebookSignIn) SignInWay.facebook,
-      ];
+  /// On Android and Huawei Apple comes last, through Apple's web page (Firebase's
+  /// Services ID com.midtrans.syriantariff.signin), once [AppConfig.appleSignInAndroid].
+  static List<SignInWay> get ways {
+    final ios = !kIsWeb && Platform.isIOS;
+    return [
+      if (ios) SignInWay.apple,
+      SignInWay.google,
+      if (AppConfig.facebookSignIn) SignInWay.facebook,
+      if (!ios && AppConfig.appleSignInAndroid) SignInWay.apple,
+    ];
+  }
 
   FirebaseAuth get _auth => FirebaseAuth.instance;
   DocumentReference<Map<String, dynamic>> get _doc => FirebaseFirestore.instance.collection('users').doc(user!.uid);
