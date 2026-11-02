@@ -43,7 +43,7 @@ class _SignInState extends State<_SignIn> {
       await app.account.signIn(way);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(app.s.signInFailed)));
-      debugPrint('sign-in: $e');
+      debugPrint('sign-in: ${e is FirebaseAuthException ? e.code : e.runtimeType}');
     } finally {
       if (mounted) setState(() => _busy = null);
     }

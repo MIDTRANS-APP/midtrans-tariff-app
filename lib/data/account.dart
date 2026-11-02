@@ -373,11 +373,23 @@ class Account extends ChangeNotifier {
   }
 
   /// Deletes the profile and the account (Apple and Google store rules). Firebase may ask
-  /// for a fresh sign-in first: that throws `requires-recent-login`.
+  /// for a fresh sign-in first: that throws `requires-recent-login`, and the profile and
+  /// newsletter are put back, so a refused deletion loses nothing.
   Future<void> deleteAccount() async {
     if (!signedIn) return;
+    final kept = profile;
     await setNewsletter(false);
     await _doc.delete();
-    await user!.delete();
+    try {
+      await user!.delete();
+    } catch (_) {
+      try {
+        await updateProfile(kept);
+        if (kept.newsletter) unawaited(_topics(true));
+      } catch (e) {
+        debugPrint('account: profile not restored: ${e.runtimeType}');
+      }
+      rethrow;
+    }
   }
 }

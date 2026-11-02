@@ -51,4 +51,7 @@ class AppConfig {
 
   /// How often the app checks the website for a newer file.
   static const refreshEvery = Duration(hours: 12);
+
+  /// A download with fewer lines than this is treated as damaged (the tariff has about 6,200).
+  static const minTariffRows = 5000;
 }

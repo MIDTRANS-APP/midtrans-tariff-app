@@ -270,7 +270,7 @@ class _LinkedText extends StatefulWidget {
 }
 
 class _LinkedTextState extends State<_LinkedText> {
-  static final _url = RegExp(r'https?://[^\s)]+');
+  static final _url = RegExp(r'https://[^\s)]+');
   final _taps = <TapGestureRecognizer>[];
 
   void _clearTaps() {
