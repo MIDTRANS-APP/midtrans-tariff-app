@@ -49,10 +49,11 @@ class _SearchScreenState extends State<SearchScreen> {
     final results = _query.trim().isEmpty ? const <TariffRow>[] : app.search(_query);
     return Scaffold(
       appBar: AppBar(
-        title: Row(children: [
+        // Bar text grows with the phone's text size only up to 1.3×, as the system bars do.
+        title: MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: Row(children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(9),
-            child: Image.asset('assets/branding/app-icon-96.png', width: 34, height: 34, filterQuality: FilterQuality.medium),
+            child: Image.asset('assets/branding/app-icon-96.png', width: 34, height: 34, filterQuality: FilterQuality.medium, excludeFromSemantics: true),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -61,9 +62,12 @@ class _SearchScreenState extends State<SearchScreen> {
               Text(s.byMidtrans, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
             ]),
           ),
-        ]),
+        ])),
         actions: [
-          TextButton(onPressed: app.toggleLang, child: Text(s.language, style: const TextStyle(color: AppColors.text))),
+          MediaQuery.withClampedTextScaling(
+            maxScaleFactor: 1.3,
+            child: TextButton(onPressed: app.toggleLang, child: Text(s.language, style: const TextStyle(color: AppColors.text))),
+          ),
           ListenableBuilder(
             listenable: app.account,
             builder: (context, _) {
@@ -115,13 +119,20 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _hero(S s) => Padding(
+  // The heading is decoration: with large text it stops growing at 1.3×, so the search
+  // field stays on the first screen.
+  Widget _hero(S s) => MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 1.3,
+      child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
             // Emblem of the General Authority for Borders and Customs, used with its written permission.
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Image(image: AssetImage('assets/branding/ports-emblem.png'), height: 32)),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Image(image: const AssetImage('assets/branding/ports-emblem.png'), height: 32, semanticLabel: s.authority),
+            ),
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
           ]),
           const SizedBox(height: 12),
@@ -132,7 +143,7 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 8),
           Text(s.searchIntro, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, height: 1.7, color: AppColors.muted)),
         ]),
-      );
+      ));
 
   List<Widget> _home(AppState app) {
     final s = app.s;

@@ -384,7 +384,8 @@ class _ProfileState extends State<_Profile> {
       GoldHeading(s.linkedWays),
       const _LinkedWays(),
       GoldHeading(s.settings),
-      SwitchListTile(
+      SwitchListTile.adaptive(
+        activeTrackColor: AppColors.gold,
         title: Text(s.newsletterTitle),
         subtitle: Text(s.newsletterHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
         value: acc.profile.newsletter,
@@ -399,14 +400,16 @@ class _ProfileState extends State<_Profile> {
         listenable: app.push,
         builder: (context, _) => !app.push.available
             ? const SizedBox.shrink()
-            : SwitchListTile(
+            : SwitchListTile.adaptive(
+                activeTrackColor: AppColors.gold,
                 title: Text(s.pushTitle),
                 subtitle: Text(s.pushSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                 value: app.push.enabled,
                 onChanged: (on) => app.push.setEnabled(on),
               ),
       ),
-      SwitchListTile(
+      SwitchListTile.adaptive(
+        activeTrackColor: AppColors.gold,
         title: Text(s.ratesSwitch),
         subtitle: Text(s.ratesSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
         value: app.showRates,

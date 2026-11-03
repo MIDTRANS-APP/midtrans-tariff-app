@@ -41,7 +41,7 @@ class ItemScreen extends StatelessWidget {
           ),
           IconButton(
             tooltip: s.share,
-            icon: const Icon(Icons.share_outlined),
+            icon: Icon(Icons.adaptive.share),
             onPressed: () => shareCodeCard(context, row),
           ),
         ],

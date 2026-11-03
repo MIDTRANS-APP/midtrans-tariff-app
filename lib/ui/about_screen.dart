@@ -38,9 +38,9 @@ class _AboutScreenState extends State<AboutScreen> {
       appBar: AppBar(title: Text(s.tabAbout)),
       body: ListView(children: [
         // Logo of the General Authority for Borders and Customs, used with its written permission.
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
-          child: Image(image: AssetImage('assets/branding/ports-logo.png'), height: 44, alignment: AlignmentDirectional.centerStart),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+          child: Image(image: const AssetImage('assets/branding/ports-logo.png'), height: 44, alignment: AlignmentDirectional.centerStart, semanticLabel: s.authority),
         ),
         const UnofficialNotice(),
         if (d != null)
@@ -52,7 +52,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 '${s.reviewed}: ${d.reviewedOn}',
                 d.origin == 'bundle' ? s.fromBundle : s.fromCache,
                 if (d.source.warning.isNotEmpty) d.source.warning,
-              ].join('\n'),
+              ].map(_isolated).join('\n'),
               style: const TextStyle(fontSize: 12.5, height: 1.8, color: AppColors.muted),
             ),
           ),
@@ -66,7 +66,8 @@ class _AboutScreenState extends State<AboutScreen> {
         link(s.authority, AppConfig.authorityUrl),
         link(s.privacy, AppConfig.privacyUrl),
         ListTile(title: Text(s.language), trailing: const Icon(Icons.translate), onTap: app.toggleLang),
-        SwitchListTile(
+        SwitchListTile.adaptive(
+          activeTrackColor: AppColors.gold,
           title: Text(s.ratesSwitch),
           subtitle: Text(s.ratesSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
           value: app.showRates,
@@ -76,7 +77,8 @@ class _AboutScreenState extends State<AboutScreen> {
           listenable: app.push,
           builder: (context, _) => !app.push.available
               ? const SizedBox.shrink()
-              : SwitchListTile(
+              : SwitchListTile.adaptive(
+                  activeTrackColor: AppColors.gold,
                   title: Text(s.pushTitle),
                   subtitle: Text(s.pushSwitchHint, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                   value: app.push.enabled,
@@ -92,3 +94,7 @@ class _AboutScreenState extends State<AboutScreen> {
     );
   }
 }
+
+/// Each line keeps its own direction, so an English line inside the Arabic page
+/// ends with its full stop instead of starting with it.
+String _isolated(String line) => '\u2068$line\u2069';
