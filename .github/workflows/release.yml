@@ -58,7 +58,7 @@ jobs:
         run: echo "ready=$([ -n "$PLAY_JSON" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
       - name: Google Play internal testing (draft)
         if: steps.play.outputs.ready == 'yes'
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1, pinned: it holds the Play account
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.midtrans.syriantariff

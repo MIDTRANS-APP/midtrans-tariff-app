@@ -22,6 +22,15 @@ class TariffRepository {
   static const _etagKey = 'tariff_etag';
   static const _checkedKey = 'tariff_checked_at';
 
+  /// A downloaded file replaces the saved copy only if it has about the size of the
+  /// tariff, as many lines as it declares, and a code on every line.
+  static bool looksComplete(TariffData d) {
+    final declared = d.source.recordCount;
+    return d.rows.length >= AppConfig.minTariffRows &&
+        (declared == null || declared == d.rows.length) &&
+        d.rows.every((r) => r.code.isNotEmpty);
+  }
+
   Future<File> _cachePath() async => File('${(await getApplicationSupportDirectory()).path}/$_cacheFile');
 
   Future<TariffData> loadLocal() async {
@@ -55,7 +64,7 @@ class TariffRepository {
       if (res.statusCode == 304 || res.statusCode != 200) return null;
       final text = utf8.decode(res.bodyBytes);
       final data = await compute(_parse, (text, 'network'));
-      if (data.rows.isEmpty) return null; // never replace a good copy with an empty one
+      if (!looksComplete(data)) return null; // never replace a good copy with a damaged one
       await (await _cachePath()).writeAsString(text, flush: true);
       final newTag = res.headers['etag'];
       if (newTag != null) await prefs.setString(_etagKey, newTag);

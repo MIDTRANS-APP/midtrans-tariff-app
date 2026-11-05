@@ -31,3 +31,19 @@ FirebaseOptions? get firebaseOptions {
   };
   return (o == null || o.appId.isEmpty || o.apiKey.isEmpty) ? null : o;
 }
+
+Future<bool>? _started;
+
+/// Starts Firebase once for push and accounts. False when this build has no Firebase
+/// app or it could not start (the app then works without notifications and sign-in).
+Future<bool> ensureFirebase() => _started ??= () async {
+      final options = firebaseOptions;
+      if (options == null) return false;
+      try {
+        await Firebase.initializeApp(options: options);
+        return true;
+      } catch (e) {
+        debugPrint('Firebase not started: $e');
+        return false;
+      }
+    }();

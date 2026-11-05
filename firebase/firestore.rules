@@ -1,0 +1,13 @@
+rules_version = '2';
+// Firestore of project midtrans-syrian-tariff: one profile per signed-in person,
+// users/{uid} (name, email, phone, newsletter). Only that person can read or write it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
