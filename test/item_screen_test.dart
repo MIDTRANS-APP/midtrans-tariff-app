@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:midtrans_gcc_tariff/app_state.dart';
 import 'package:midtrans_gcc_tariff/data/tariff_models.dart';
+import 'package:midtrans_gcc_tariff/ui/customs_screen.dart';
 import 'package:midtrans_gcc_tariff/ui/item_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,12 +36,24 @@ void main() {
     expect(find.text('احسب الرسم بالدولار'), findsOneWidget);
     await t.enterText(find.byType(TextField), '12,500');
     await t.pump();
-    expect(find.text('الرسم الجمركي التقريبي: 625 دولار (5%)'), findsOneWidget);
+    expect(find.text('الرسم الجمركي التقريبي: 625 دولار (\u20665%\u2069)'), findsOneWidget);
   });
 
   testWidgets('prohibited line has no calculator', (t) async {
     await open(t, '010310000000');
     expect(find.text('ممنوع استيراده في التعرفة الخليجية'), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('customs tab lists the six states and their official sites', (t) async {
+    SharedPreferences.setMockInitialValues({});
+    final state = AppState()..useForTest(data);
+    await t.pumpWidget(AppScope(state: state, child: const MaterialApp(home: CustomsScreen())));
+    await t.pump();
+    for (final host in ['zatca.gov.sa', 'www.dubaicustoms.gov.ae', 'www.customs.gov.kw']) {
+      expect(find.text(host), findsOneWidget);
+    }
+    await t.scrollUntilVisible(find.text('www.customs.gov.om'), 300);
+    expect(find.text('www.customs.gov.om'), findsOneWidget);
   });
 }

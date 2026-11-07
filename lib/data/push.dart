@@ -1,3 +1,4 @@
+import '../shot.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,7 +29,7 @@ class Push extends ChangeNotifier {
     _lang = lang;
     final p = await SharedPreferences.getInstance();
     enabled = p.getBool(_enabledKey) ?? false;
-    asked = p.getBool(_askedKey) ?? false;
+    asked = (p.getBool(_askedKey) ?? false) || Shot.on;
     if (!await ensureFirebase()) return;
     available = true;
     FirebaseMessaging.onMessage.listen((m) {

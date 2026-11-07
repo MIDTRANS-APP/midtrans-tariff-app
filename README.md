@@ -5,8 +5,12 @@ Same screens; data = https://www.mid-trans.com/reference/gcc-customs-tariff/gcc-
 (13,431 lines, 12-digit codes, duty as % of CIF). Bundled data: `python3 tools/build_assets.py`.
 Item page has a USD duty calculator (owner: «نسبة فقط + حاسبة بالدولار»). No government emblem.
 
-Still on the Syrian app's accounts until the owner registers this app: Firebase
-(lib/firebase_options.dart, iOS URL scheme in Info.plist), Facebook app id, Apple Sign-in Services ID.
+Firebase: apps com.midtrans.gcctariff added to project midtrans-syrian-tariff on 2026-11-07
+(iOS 1:681262761995:ios:35ed2b82946b8e788f9f0e, Android …:android:5e915e1e54c32fc78f9f0e, same
+upload/debug SHA-1 as the Syrian app; add the Play app-signing SHA-1 after the first Play upload).
+Facebook and Apple sign-in on Android are OFF (config.dart) until the Meta app and an Apple
+Services ID cover com.midtrans.gcctariff. Icon: tools/make_icon.py (six flags, no GCC emblem).
+Store screenshots: tools in lib/shot.dart (debug only) + store/screenshots/gcc-iphone/.
 
 ---
 

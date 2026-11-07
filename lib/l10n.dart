@@ -23,6 +23,10 @@ class S {
   String get tabSearch => _t('بحث', 'Search');
   String get tabFavorites => _t('المفضلة', 'Saved');
   String get tabMira => _t('اسأل ميرا', 'Ask MIRA');
+  String get tabCustoms => _t('الجمارك', 'Customs');
+  String get customsIntro => _t(
+      'المواقع الرسمية لجمارك دول الخليج الست. تفتح في المتصفح؛ ميدترانس غير تابعة لأي منها.',
+      'Official customs websites of the six GCC states. They open in your browser; MIDTRANS is not affiliated with any of them.');
   String get tabAbout => _t('عن التطبيق', 'About');
   String get itemTitle => _t('تفاصيل البند', 'Code details');
   String get figures => _t('الرسوم', 'Fees');
@@ -161,7 +165,9 @@ class S {
   String get calcTitle => _t('احسب الرسم بالدولار', 'Work out the duty in USD');
   String get calcLabel => _t('القيمة الجمركية (CIF) بالدولار', 'Customs value (CIF) in USD');
   String get calcHint => _t('مثال: 10000', 'e.g. 10000');
-  String calcResult(String duty, String pct) => _t('الرسم الجمركي التقريبي: $duty دولار ($pct)', 'Approximate customs duty: $duty USD ($pct)');
+  // \u2066…\u2069 keeps «5%» left-to-right inside the Arabic sentence
+  String calcResult(String duty, String pct) =>
+      _t('الرسم الجمركي التقريبي: $duty دولار (\u2066$pct\u2069)', 'Approximate customs duty: $duty USD ($pct)');
   String get calcNote => _t(
       'تقدير للاسترشاد: لا يشمل ضريبة القيمة المضافة أو الضريبة الانتقائية أو رسوم الخدمات في دولة الوصول.',
       'An estimate for guidance: it leaves out VAT, excise tax and service charges in the destination state.');

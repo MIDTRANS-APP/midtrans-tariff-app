@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../ads/ad_slot.dart';
 import '../app_state.dart';
+import '../shot.dart';
 import '../data/tariff_models.dart';
 import '../l10n.dart';
 import 'account_screen.dart';
@@ -24,6 +25,13 @@ class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   Timer? _debounce;
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    final q = Shot.arg('search');
+    if (q.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => _setQuery(q));
+  }
 
   @override
   void dispose() {

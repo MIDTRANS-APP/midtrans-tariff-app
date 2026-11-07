@@ -36,11 +36,14 @@ class AppConfig {
 
   /// Facebook sign-in shows once its Meta app (created from the owner's Meta account) is
   /// set in Firebase › Authentication › Facebook. Google and Apple need nothing here.
-  static const facebookSignIn = true;
+  /// GCC app: off until the Meta app also lists com.midtrans.gcctariff (iOS bundle and
+  /// Android package + key hashes); the Meta app is still the Syrian one.
+  static const facebookSignIn = false;
 
   /// Sign in with Apple on Android and Huawei (owner 2026-10-29: «عالج الكل»). Needs the
   /// Apple provider's OAuth code flow (team, key ID, private key) filled in Firebase.
-  static const appleSignInAndroid = true; // Meta app 1089754473832330 "Syrian Customs Tariff" (the GCC app needs its own)
+  /// GCC app: off until an Apple Services ID for com.midtrans.gcctariff exists.
+  static const appleSignInAndroid = false; // Meta app 1089754473832330 "Syrian Customs Tariff" (the GCC app needs its own)
 
   /// The body behind the unified tariff (linked, never imitated): the GCC Secretariat.
   static const authorityUrl = 'https://www.gcc-sg.org/';

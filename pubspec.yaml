@@ -75,12 +75,12 @@ flutter:
       fonts:
         - asset: assets/fonts/Cairo-Variable.ttf
 
-# App icons from the MIDTRANS logo (assets/branding). Regenerate: dart run flutter_launcher_icons
+# App icon: the six GCC flags around the MIDTRANS mark (tools/make_icon.py). Regenerate: dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/branding/icon-1024.png"
   remove_alpha_ios: true
   adaptive_icon_background: "assets/branding/icon-background.png"
-  adaptive_icon_foreground: "assets/branding/icon-foreground.png"
+  adaptive_icon_foreground: "assets/branding/icon-foreground-gcc.png"
   min_sdk_android: 21

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../ads/ad_slot.dart';
 import '../app_state.dart';
+import '../shot.dart';
 import '../data/fee_text.dart';
 import '../data/search.dart' show asciiDigits;
 import '../data/tariff_models.dart';
@@ -145,7 +146,7 @@ class _DutyCalculator extends StatefulWidget {
 }
 
 class _DutyCalculatorState extends State<_DutyCalculator> {
-  final _value = TextEditingController();
+  final _value = TextEditingController(text: Shot.calc);
 
   @override
   void dispose() {

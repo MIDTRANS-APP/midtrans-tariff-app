@@ -16,6 +16,7 @@
 - أكثر من 13,400 بند بالرقم الكامل من 12 خانة، بوصف عربي وإنكليزي.
 - نسبة الرسم الجمركي لكل بند، وحاسبة تعطيك الرسم بالدولار من قيمة البضاعة.
 - توضيح البنود الممنوع استيرادها والسلع الخاصة.
+- تبويب «الجمارك»: روابط المواقع الرسمية لجمارك الدول الست.
 - يعمل بدون إنترنت، ويتحدث تلقائياً من موقع ميدترانس عند الاتصال.
 - احفظ البنود التي تستخدمها، وشاركها كبطاقة.
 - اسأل ميرا، مساعدة ميدترانس، عن البند أو عن الشحن إلى الخليج.
@@ -35,6 +36,7 @@ Search the GCC unified customs tariff (Saudi Arabia, UAE, Kuwait, Qatar, Bahrain
 - Over 13,400 lines with the full 12-digit code, in Arabic and English.
 - The duty percentage for every line, and a calculator that gives the duty in USD from the goods value.
 - Prohibited and special goods clearly marked.
+- A Customs tab with the official customs websites of the six states.
 - Works offline and updates itself from mid-trans.com when online.
 - Save the codes you use and share them as a card.
 - Ask MIRA, the MIDTRANS assistant, about a code or about shipping to the Gulf.

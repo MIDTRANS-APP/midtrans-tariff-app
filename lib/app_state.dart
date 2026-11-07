@@ -10,6 +10,7 @@ import 'data/search.dart';
 import 'data/tariff_models.dart';
 import 'data/tariff_repository.dart';
 import 'l10n.dart';
+import 'shot.dart';
 
 class AppState extends ChangeNotifier {
   AppState({TariffRepository? repository}) : repository = repository ?? TariffRepository();
@@ -47,6 +48,11 @@ class AppState extends ChangeNotifier {
     lang = prefs.getString('lang') ?? 'ar';
     showRates = prefs.getBool('show_rates') ?? false;
     ratesAsked = prefs.getBool('rates_asked') ?? false;
+    if (Shot.on) {
+      lang = Shot.lang;
+      showRates = true;
+      ratesAsked = true;
+    }
     await favorites.load();
     unawaited(push.start(lang));
     unawaited(account.start(lang));
