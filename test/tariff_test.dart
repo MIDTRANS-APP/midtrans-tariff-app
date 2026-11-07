@@ -2,23 +2,29 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:midtrans_tariff/data/fee_text.dart';
-import 'package:midtrans_tariff/data/search.dart';
-import 'package:midtrans_tariff/data/tariff_models.dart';
+import 'package:midtrans_gcc_tariff/data/fee_text.dart';
+import 'package:midtrans_gcc_tariff/data/search.dart';
+import 'package:midtrans_gcc_tariff/data/tariff_models.dart';
 
-TariffData loadBundle() {
-  final text = utf8.decode(gzip.decode(File('assets/data/syria-tariff.json.gz').readAsBytesSync()));
-  return TariffData.fromJson(jsonDecode(text) as Map<String, dynamic>, 'bundle');
-}
+Map<String, dynamic> gz(String path) =>
+    jsonDecode(utf8.decode(gzip.decode(File(path).readAsBytesSync()))) as Map<String, dynamic>;
 
 void main() {
-  final data = loadBundle();
+  HsContext.current = HsContext.fromJson(gz('assets/data/hs-context.json.gz'));
+  final json = gz('assets/data/gcc-tariff.json.gz');
+  final data = TariffData.fromJson(json, 'bundle');
   final search = TariffSearch(data.rows);
   TariffRow row(String code) => data.rows.firstWhere((r) => r.code == code);
 
   test('bundled snapshot loads every published line', () {
-    expect(data.rows.length, data.source.recordCount);
+    expect(data.rows.length, json['count']);
+    expect(data.rows.every((r) => r.code.length == 12), isTrue);
     expect(data.reviewedOn, matches(RegExp(r'^\d{4}-\d{2}-\d{2}$')));
+  });
+
+  test('12-digit codes display as 0000.00.00.0000', () {
+    expect(row('010121100001').displayCode, '0101.21.10.0001');
+    expect(row('010121100001').heading, '01.01');
   });
 
   test('code search accepts dots, spaces and Arabic-Indic digits', () {
@@ -36,30 +42,40 @@ void main() {
     expect(a, b);
   });
 
-  test('English search matches every word', () {
-    final r = search.search('coffee roasted');
-    expect(r, isNotEmpty);
-    expect(r.first.code.startsWith('0901'), isTrue);
+  test('short GCC wording is still found by the HS6 wording (horses)', () {
+    final r = search.search('horses');
+    expect(r.any((x) => x.code.startsWith('010121')), isTrue);
+    expect(search.search('خيول').any((x) => x.code.startsWith('0101')), isTrue);
   });
 
   test('everyday words find the tariff term (قهوة → بن)', () {
-    final r = search.search('قهوة');
-    expect(r.any((x) => x.code.startsWith('0901')), isTrue);
+    expect(search.search('قهوة').any((x) => x.code.startsWith('0901')), isTrue);
   });
 
-  test('figures are shown verbatim from the file', () {
-    final r = row('52094200');
-    final fees = feeSummary(r, 'ar');
-    expect(fees.lines.map((l) => l.value), containsAll(['375', '125', '500']));
-    expect(fees.note, contains('حسب الوزن'));
-    expect(fees.headline, 'الإجمالي 500 دولار حسب الوزن');
+  test('chapters show their section name', () {
+    expect(row('010121100001').category('en'), 'Animals and Animal Products');
   });
 
-  test('negative-list and not-in-amendment lines say so', () {
-    final r = row('02101100');
-    expect(feeSummary(r, 'ar').lines, isEmpty);
-    expect(feeSummary(r, 'ar').note, contains('القائمة السلبية'));
-    expect(statusNotes(r, 'ar').join(), contains('غير وارد في جدول الرسوم الجمركية المعدّلة'));
+  test('percent duty and the USD calculator', () {
+    final r = data.rows.firstWhere((x) => x.dutyPercent == 5 && x.importStatus == 'value');
+    final f = feeSummary(r, 'ar');
+    expect(f.lines.first.value, '5%');
+    expect(f.headline, 'رسم 5% من القيمة');
+    expect(dutyOn(r, 10000), 500);
+    expect(percentOfInvoice(r), '5%');
+  });
+
+  test('prohibited and special goods say so', () {
+    final p = row('010310000000');
+    expect(feeSummary(p, 'ar').lines, isEmpty);
+    expect(feeSummary(p, 'ar').note, contains('ممنوع'));
+    expect(dutyOn(p, 1000), isNull);
+    final s = row('020311000000');
+    expect(feeSummary(s, 'ar').headline, startsWith('سلع خاصة'));
+  });
+
+  test('descriptions drop the outline dashes', () {
+    expect(row('010310000000').description('ar'), 'خنازير أصيلة للأنسال');
   });
 
   test('every line yields a summary without throwing', () {

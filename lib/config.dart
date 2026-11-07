@@ -5,13 +5,13 @@ class AppConfig {
   /// The thank-you email to a new account, sent by the MIDTRANS platform (V2).
   static const welcomeApi = 'https://app.midtrans.net/api/v2/public/tariff-app/welcome';
 
-  /// The Syrian tariff as mid-trans.com publishes it (same file MIRA reads).
+  /// The unified GCC customs tariff as mid-trans.com publishes it (same file MIRA reads).
   static const tariffUrl =
-      'https://www.mid-trans.com/reference/syrian-hs-code-tariff/syrian-hs-code-tariff.json';
+      'https://www.mid-trans.com/reference/gcc-customs-tariff/gcc-customs-tariff.json';
 
-  /// Public pages of the Syrian tariff on mid-trans.com.
-  static const tariffPageAr = 'https://www.mid-trans.com/ar/customs-tariff/syria/';
-  static const tariffPageEn = 'https://www.mid-trans.com/customs-tariff/syria/';
+  /// Public pages of the GCC tariff on mid-trans.com (one page per code under these).
+  static const tariffPageAr = 'https://www.mid-trans.com/ar/gcc-customs-tariff/';
+  static const tariffPageEn = 'https://www.mid-trans.com/gcc-customs-tariff/';
 
   /// MIRA's existing standalone chat page. Its origin is already allowed by MIRA,
   /// so the app opens it as is (owner 2026-10-22: no change to MIRA or the website).
@@ -25,10 +25,11 @@ class AppConfig {
   /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
   static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
 
-  /// The unified GCC tariff on mid-trans.com: given when someone asks about it explicitly;
-  /// the app itself is for the Syrian tariff only (owner 2026-10-28).
-  static const gccTariffAr = 'https://www.mid-trans.com/ar/gcc-customs-tariff/';
-  static const gccTariffEn = 'https://www.mid-trans.com/gcc-customs-tariff/';
+  /// The Syrian tariff on mid-trans.com and MIDTRANS's Syrian tariff app: given when
+  /// someone asks about Syria (this app is for the GCC tariff, owner 2026-11-07).
+  static const syriaTariffAr = 'https://www.mid-trans.com/ar/customs-tariff/syria/';
+  static const syriaTariffEn = 'https://www.mid-trans.com/customs-tariff/syria/';
+  static const syriaAppPage = 'https://www.mid-trans.com/tariff-app/';
 
   /// MIDTRANS team on WhatsApp (the number MIRA's page uses), offered when MIRA hands over.
   static const whatsappUrl = 'https://wa.me/963930204408';
@@ -39,19 +40,22 @@ class AppConfig {
 
   /// Sign in with Apple on Android and Huawei (owner 2026-10-29: «عالج الكل»). Needs the
   /// Apple provider's OAuth code flow (team, key ID, private key) filled in Firebase.
-  static const appleSignInAndroid = true; // Meta app 1089754473832330 "Syrian Customs Tariff"
+  static const appleSignInAndroid = true; // Meta app 1089754473832330 "Syrian Customs Tariff" (the GCC app needs its own)
 
-  /// The authority the figures come from (linked, never imitated).
-  static const authorityUrl = 'https://website.syrianborders.gov.sy/';
+  /// The body behind the unified tariff (linked, never imitated): the GCC Secretariat.
+  static const authorityUrl = 'https://www.gcc-sg.org/';
 
   static const privacyUrl = 'https://www.mid-trans.com/privacy-policy/';
 
   /// Snapshot bundled in the app, refreshed from [tariffUrl] when online.
-  static const bundledTariffAsset = 'assets/data/syria-tariff.json.gz';
+  static const bundledTariffAsset = 'assets/data/gcc-tariff.json.gz';
+
+  /// Chapter sections and worldwide 6-digit HS wording, used only to help search.
+  static const hsContextAsset = 'assets/data/hs-context.json.gz';
 
   /// How often the app checks the website for a newer file.
   static const refreshEvery = Duration(hours: 12);
 
-  /// A download with fewer lines than this is treated as damaged (the tariff has about 6,200).
-  static const minTariffRows = 5000;
+  /// A download with fewer lines than this is treated as damaged (the tariff has about 13,400).
+  static const minTariffRows = 12000;
 }

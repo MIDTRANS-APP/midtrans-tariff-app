@@ -1,29 +1,19 @@
 import 'tariff_models.dart';
 
-/// How a line's figures are read out. Same rules and wording MIRA uses
-/// (midtrans-mira src/hs-tariff-service.mjs feeText), so the app, the website
-/// and MIRA say the same thing about the same code. Figures are shown verbatim.
+/// How a line of the GCC unified tariff is read out. Figures are shown as published:
+/// the duty is a percentage of the customs value (CIF), the same in the six GCC states.
 
-bool isExempt(TariffRow r) =>
-    r.dutyStatus == 'exempt' ||
-    RegExp(r'^(exempt|معفى)', caseSensitive: false).hasMatch(r.text('duty_rate', 'en').isNotEmpty ? r.text('duty_rate', 'en') : r.text('duty_rate', 'ar'));
+bool isProhibited(TariffRow r) => r.importStatus == 'prohibited';
+bool isSpecial(TariffRow r) => r.importStatus == 'special';
+bool notSpecified(TariffRow r) => r.dutyPercent == null;
 
-bool isNegative(TariffRow r) =>
-    r.dutyStatus == 'negative_list' ||
-    r.totalFeeStatus == 'negative_list' ||
-    RegExp(r'negative list|القائمة السلبية', caseSensitive: false)
-        .hasMatch(r.text('total_fee', 'en').isNotEmpty ? r.text('total_fee', 'en') : r.text('total_fee', 'ar'));
-
-bool notListed(TariffRow r) => r.dutyStatus == 'not_listed' && r.totalFeeStatus == 'not_listed';
-
+/// Kept for share card and lists that ask for a short percent: '5%' or ''.
 String percentOfInvoice(TariffRow r) {
-  final v = r.text('total_fee', 'en').isNotEmpty ? r.text('total_fee', 'en') : r.text('total_fee', 'ar');
-  return RegExp(r'^\d+(?:\.\d+)?\s*%$').hasMatch(v) ? v.replaceAll(RegExp(r'\s+'), '') : '';
+  final p = r.dutyPercent;
+  return p == null ? '' : '${formatPercent(p)}%';
 }
 
-bool byWeight(TariffRow r, String lang) => lang == 'en'
-    ? RegExp(r'^weight$', caseSensitive: false).hasMatch(r.text('unit', 'en'))
-    : r.text('unit', 'ar') == 'وزن';
+String formatPercent(double p) => p == p.roundToDouble() ? p.toInt().toString() : p.toString();
 
 /// One fee figure on the item page.
 class FeeLine {
@@ -38,7 +28,7 @@ class FeeSummary {
   /// Rows of the figures table (label, value as published).
   final List<FeeLine> lines;
 
-  /// Unit explanation or status sentence under the table.
+  /// Explanation or status sentence under the table.
   final String note;
 
   /// Short form for result lists.
@@ -47,77 +37,60 @@ class FeeSummary {
 
 FeeSummary feeSummary(TariffRow r, String lang) {
   final en = lang == 'en';
-  if (isNegative(r)) {
-    final t = en
-        ? 'On the negative list (import restricted — check before shipping)'
-        : 'مدرج في القائمة السلبية (استيراده مقيّد — يُتحقَّق منه قبل الشحن)';
-    return FeeSummary(lines: const [], note: t, headline: en ? 'Negative list' : 'القائمة السلبية');
+  if (isProhibited(r)) {
+    final t = en ? 'Import prohibited in the GCC tariff' : 'ممنوع استيراده في التعرفة الخليجية';
+    return FeeSummary(lines: const [], note: t, headline: en ? 'Prohibited' : 'ممنوع استيراده');
   }
   final pct = percentOfInvoice(r);
-  if (pct.isNotEmpty) {
-    final t = en ? 'Duty $pct of the invoice value' : 'رسم $pct من قيمة الفاتورة';
-    return FeeSummary(lines: [FeeLine(en ? 'Total' : 'الإجمالي', pct)], note: t, headline: t);
-  }
-  if (notListed(r)) {
-    final t = en ? 'No figure in the published table — confirm with customs' : 'لا رقم في الجدول المنشور — يُؤكَّد مع الجمارك';
-    return FeeSummary(lines: const [], note: t, headline: en ? 'Not listed' : 'غير مدرج');
-  }
-  String v(String f) => r.text(f, lang);
-  final weight = byWeight(r, lang);
-  final unit = v('unit');
-  final exempt = isExempt(r);
   final lines = <FeeLine>[];
-  if (exempt) {
-    lines.add(FeeLine(en ? 'Import duty' : 'رسم الاستيراد', en ? 'Exempt' : 'معفى من الرسم'));
-  } else if (v('duty_rate').isNotEmpty) {
-    lines.add(FeeLine(en ? 'Import duty' : 'رسم الاستيراد', v('duty_rate')));
+  if (pct.isNotEmpty) {
+    lines.add(FeeLine(en ? 'Customs duty' : 'الرسم الجمركي', pct));
+  } else {
+    lines.add(FeeLine(en ? 'Customs duty' : 'الرسم الجمركي', en ? 'Not specified' : 'غير محدّد'));
   }
-  if (v('additional_fees').isNotEmpty) lines.add(FeeLine(en ? 'Additional fees' : 'رسوم إضافية', v('additional_fees')));
-  if (v('total_fee').isNotEmpty) lines.add(FeeLine(en ? 'Total' : 'الإجمالي', v('total_fee')));
-  // export tax shown when not 0, or when a later decree changed the export side
-  final exportChanged = r.decreeAmendmentAr.contains('التصدير');
-  if (v('export_tax').isNotEmpty && (v('export_tax') != '0' || exportChanged)) {
-    lines.add(FeeLine(en ? 'Export tax' : 'ضريبة التصدير', v('export_tax')));
-    if (v('export_service_fee_per_ton').isNotEmpty) {
-      lines.add(FeeLine(en ? 'Export service fee per ton' : 'رسم خدمات التصدير للطن', v('export_service_fee_per_ton')));
-    }
+  final special = isSpecial(r);
+  if (special) lines.add(FeeLine(en ? 'Import status' : 'حالة الاستيراد', en ? 'Special goods' : 'سلع خاصة'));
+
+  String note;
+  if (special) {
+    note = en
+        ? 'Special goods: import needs conditions or approvals that differ between GCC states — check with the customs of the destination state.'
+        : 'سلع خاصة: استيرادها يحتاج شروطاً أو موافقات تختلف بين دول الخليج — يُتحقَّق منها مع جمارك دولة الوصول.';
+  } else if (pct.isEmpty) {
+    note = en ? 'No duty figure in the published table — confirm with customs.' : 'لا رقم للرسم في الجدول المنشور — يُؤكَّد مع الجمارك.';
+  } else {
+    note = en
+        ? 'Percentage of the customs value (CIF: goods + freight + insurance). VAT and excise tax are separate and set by each state.'
+        : 'نسبة من القيمة الجمركية (CIF: البضاعة + الشحن + التأمين). ضريبة القيمة المضافة والضريبة الانتقائية منفصلة وتحددها كل دولة.';
   }
-  final note = weight
-      ? (en
-          ? 'Reference figures in USD — a fixed amount by weight, usually per ton (1,000 kg).'
-          : 'قيم مرجعية بالدولار الأمريكي — مبلغ مقطوع حسب الوزن، غالباً لكل طن (1000 كغ).')
-      : (en
-          ? 'Reference figures in USD${unit.isNotEmpty ? '; unit: $unit' : ''}.'
-          : 'قيم مرجعية بالدولار الأمريكي${unit.isNotEmpty ? '؛ الوحدة: $unit' : ''}.');
-  final total = v('total_fee');
-  var headline = total.isNotEmpty
-      ? (en ? 'Total $total USD${weight ? ' by weight' : ''}' : 'الإجمالي $total دولار${weight ? ' حسب الوزن' : ''}')
-      : '';
-  if (exempt) headline = en ? 'Exempt from duty${headline.isNotEmpty ? ', $headline' : ''}' : 'معفى من الرسم${headline.isNotEmpty ? '، $headline' : ''}';
-  return FeeSummary(lines: lines, note: lines.isEmpty ? '' : note, headline: headline);
+
+  var headline = pct.isNotEmpty
+      ? (pct == '0%' ? (en ? 'Duty 0% (exempt)' : 'رسم 0% (معفى)') : (en ? 'Duty $pct of the value' : 'رسم $pct من القيمة'))
+      : (en ? 'Duty not specified' : 'رسم غير محدّد');
+  if (special) headline = en ? 'Special goods · $headline' : 'سلع خاصة · $headline';
+  return FeeSummary(lines: lines, note: note, headline: headline);
+}
+
+/// Duty in USD on a customs value in USD, or null when the line has no percentage.
+double? dutyOn(TariffRow r, double valueUsd) {
+  final p = r.dutyPercent;
+  if (p == null || isProhibited(r)) return null;
+  return valueUsd * p / 100;
 }
 
 /// Status notes on a line, from the file's own flags.
 List<String> statusNotes(TariffRow r, String lang) {
   final en = lang == 'en';
   final notes = <String>[];
-  final repl = r.replacedBy;
-  if (repl.isNotEmpty || r.sourceStatus.startsWith('replaced_by')) {
+  if (r.sourceStatus == 'reference_import_pending_official_confirmation') {
     notes.add(en
-        ? 'A later legislative decree split or renumbered this code${repl.isNotEmpty ? ' — see ${repl.join(', ')}' : ''}.'
-        : 'قسّم مرسوم تشريعي لاحق هذا البند أو غيّر رقمه${repl.isNotEmpty ? ' — راجع ${repl.join('، ')}' : ''}.');
+        ? 'Reference copy of the unified tariff: classification, duty, exemptions and import status are confirmed by the customs of the destination GCC state.'
+        : 'نسخة مرجعية من التعرفة الموحّدة: التصنيف والرسم والإعفاءات وحالة الاستيراد تؤكّدها جمارك دولة الخليج المستوردة.');
   }
-  if (r.sourceStatus.contains('presidential_decree') || r.decreeAmendmentAr.isNotEmpty) {
-    final words = r.decreeAmendmentAr;
+  if (r.dutyPercent == 100) {
     notes.add(en
-        ? 'Amended by a later legislative decree${words.isNotEmpty ? ': «$words»' : ''}.'
-        : 'معدّل بمرسوم تشريعي لاحق${words.isNotEmpty ? ': «$words»' : ''}.');
-  }
-  if (!r.inLatestAmendment && repl.isEmpty) {
-    final neg = isNegative(r);
-    notes.add(en
-        ? 'Not in the Syrian Customs amended fees table; its ${neg ? 'negative-list status' : 'duty'} is the earlier one (${r.source}), to be confirmed with customs.'
-        : 'هذا البند غير وارد في جدول الرسوم الجمركية المعدّلة؛ ${neg ? 'إدراجه في القائمة السلبية من الجدول السابق' : 'رسمه هو الرسم السابق'}، ويُؤكَّد مع الجمارك.');
+        ? 'A 100% duty usually applies to tobacco and similar goods; some states add excise tax on top.'
+        : 'رسم 100% يطبَّق عادة على التبغ ومنتجاته وما يشابهها، وتضيف بعض الدول ضريبة انتقائية فوقه.');
   }
   return notes;
 }

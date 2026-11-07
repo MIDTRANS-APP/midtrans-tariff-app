@@ -35,8 +35,7 @@ class _Line {
   final bool handoff;
   final bool failed;
 
-  /// MIRA asks which destination country: the app offers Syria or the Gulf tariff as
-  /// buttons instead (owner 2026-10-28).
+  /// MIRA asks which destination country: the app offers the six GCC states as buttons.
   final bool asksCountry;
 
   static final _countryQuestion = RegExp(
@@ -51,8 +50,8 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   final _lines = <_Line>[];
   final _history = <MiraTurn>[];
   bool _busy = false;
-  static final _gulf = RegExp(
-      r'(خليج|الخليجية|السعودي|السعودية|الإمارات|الامارات|الكويت|قطر|البحرين|عمان|عُمان|دبي|GCC|Gulf|Saudi|UAE|Emirates|Kuwait|Qatar|Bahrain|Oman|Dubai)',
+  static final _syria = RegExp(
+      r'(سوريا|سورية|السوري|السورية|دمشق|اللاذقية|طرطوس|Syria|Syrian|Damascus|Latakia|Tartous)',
       caseSensitive: false);
   String? _lastQuestion;
   String? _lastCode;
@@ -92,11 +91,11 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     });
     _input.clear();
     _toEnd();
-    // An explicit question about the Gulf tariff gets its page on mid-trans.com; the app
-    // itself covers the Syrian tariff only (owner 2026-10-28).
-    if (code == null && _gulf.hasMatch(q)) {
+    // A question about Syria gets MIDTRANS's Syrian tariff app and page; this app covers
+    // the unified GCC tariff only (owner 2026-11-07).
+    if (code == null && _syria.hasMatch(q)) {
       setState(() {
-        _lines.add(_Line(false, app.s.gulfAnswer(app.lang == 'ar' ? AppConfig.gccTariffAr : AppConfig.gccTariffEn)));
+        _lines.add(_Line(false, app.s.syriaAnswer(AppConfig.syriaAppPage, app.lang == 'ar' ? AppConfig.syriaTariffAr : AppConfig.syriaTariffEn)));
         _busy = false;
       });
       _toEnd();

@@ -31,6 +31,22 @@ class ShippingRate {
   String get to => _port(destinationPort);
   bool get toSyria => destinationCountry.toLowerCase() == 'syria';
 
+  /// Destination flag for the ticker (anchor when unknown).
+  String get flag => switch (destinationCountry.toLowerCase()) {
+        'uae' || 'united arab emirates' => '🇦🇪',
+        'saudi arabia' || 'ksa' => '🇸🇦',
+        'kuwait' => '🇰🇼',
+        'qatar' => '🇶🇦',
+        'bahrain' => '🇧🇭',
+        'oman' => '🇴🇲',
+        'syria' => '🇸🇾',
+        _ => '⚓',
+      };
+
+  /// GCC destinations come first in this app.
+  bool get toGulf => const {'uae', 'united arab emirates', 'saudi arabia', 'ksa', 'kuwait', 'qatar', 'bahrain', 'oman'}
+      .contains(destinationCountry.toLowerCase());
+
   static ShippingRate? fromJson(Map<String, dynamic> j) {
     final price = j['priceUsd'];
     if (price is! num || j['status'] != 'Active') return null;
@@ -47,7 +63,7 @@ class ShippingRate {
 }
 
 /// Reads the public price list, keeps the last copy for offline use, and returns the
-/// prices still valid today: Syria first, then the Gulf (owner 2026-10-28).
+/// prices still valid today: GCC destinations first, then the rest.
 class RatesSource {
   static const _cacheKey = 'rates_cache_v1';
 
@@ -78,7 +94,7 @@ class RatesSource {
           if (r is Map<String, dynamic>) ShippingRate.fromJson(r),
       ].whereType<ShippingRate>().where((r) => r.validUntil == null || !r.validUntil!.isBefore(today)).toList();
       rates.sort((a, b) {
-        if (a.toSyria != b.toSyria) return a.toSyria ? -1 : 1;
+        if (a.toGulf != b.toGulf) return a.toGulf ? -1 : 1;
         final d = a.destinationCountry.compareTo(b.destinationCountry);
         return d != 0 ? d : a.priceUsd.compareTo(b.priceUsd);
       });

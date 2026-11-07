@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-/// Palette: the official, sober look of the Syrian borders authority's site
-/// (deep green-black, gold markers, silver titles) with MIDTRANS blue for the
-/// MIDTRANS actions. The authority's emblem and logo appear with its written permission.
+/// Palette: deep Gulf navy, gold markers, silver titles, MIDTRANS blue for the
+/// MIDTRANS actions. Same layout as MIDTRANS's Syrian tariff app, its own colours.
+/// No government emblem or logo is used.
 class AppColors {
-  static const ground = Color(0xFF0B2523);
-  static const surface = Color(0xFF13302E);
-  static const bar = Color(0xFF1B3533);
-  static const line = Color(0xFF2E4A47);
+  static const ground = Color(0xFF0A1C2E);
+  static const surface = Color(0xFF112840);
+  static const bar = Color(0xFF17304A);
+  static const line = Color(0xFF2A4560);
   static const gold = Color(0xFFB9A67D);
   static const goldText = Color(0xFFD9C9A0);
   static const text = Color(0xFFE8ECEB);
-  static const muted = Color(0xFFA9B8B5);
+  static const muted = Color(0xFFA6B4C4);
   static const midtransBlue = Color(0xFF007DC5);  static const warn = Color(0xFFE9B872);
 }
 

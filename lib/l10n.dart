@@ -8,14 +8,14 @@ class S {
   bool get en => lang == 'en';
   String _t(String ar, String en) => this.en ? en : ar;
 
-  String get appName => _t('التعرفة الجمركية السورية', 'Syrian Customs Tariff');
+  String get appName => _t('التعرفة الجمركية الخليجية', 'GCC Customs Tariff');
   String get byMidtrans => _t('ميدترانس · MIDTRANS', 'MIDTRANS · ميدترانس');
   String get searchTitle => _t('البحث في التعرفة', 'Search the tariff');
   String get searchIntro => _t(
       'ابحث برقم البند أو باسم البضاعة بالعربية أو الإنكليزية. يعمل بدون إنترنت.',
       'Search by HS code or by goods name in Arabic or English. Works offline.');
   String get searchLabel => _t('رقم البند أو وصف البضاعة', 'HS code or goods description');
-  String get searchHint => _t('مثال: 0901 أو قهوة', 'e.g. 0901 or coffee');
+  String get searchHint => _t('مثال: 0901 أو قهوة أو سيارات', 'e.g. 0901, coffee or cars');
   String get browse => _t('تصفح الأقسام', 'Browse categories');
   String get recent => _t('عمليات البحث الأخيرة', 'Recent searches');
   String results(int n) => _t('$n نتيجة', '$n results');
@@ -38,9 +38,9 @@ class S {
   String get noFavorites => _t('لم تحفظ أي بند بعد. اضغط النجمة في صفحة البند.', 'Nothing saved yet. Tap the star on a code page.');
   String get guidance => _t('للاسترشاد فقط. التصنيف والرسوم النهائية تؤكّدها الجمارك.', 'For guidance only. Final classification and fees are confirmed by customs.');
   String get unofficial => _t(
-      'تطبيق غير رسمي من ميدترانس، وليس تابعاً لأي جهة حكومية. مصدر الأرقام: جداول الجمارك السورية المنشورة.',
-      'An unofficial MIDTRANS app, not affiliated with any government body. Figures come from the published Syrian customs tables.');
-  String get authority => _t('الهيئة العامة للمنافذ والجمارك', 'General Authority for Borders and Customs');
+      'تطبيق غير رسمي من ميدترانس، وليس تابعاً لأي جهة حكومية. مصدر الأرقام: التعرفة الجمركية الموحّدة لدول مجلس التعاون الخليجي (نسخة مرجعية).',
+      'An unofficial MIDTRANS app, not affiliated with any government body. Figures come from the GCC unified customs tariff (reference copy).');
+  String get authority => _t('الأمانة العامة لمجلس التعاون الخليجي', 'GCC Secretariat General');
   String get dataVersion => _t('نسخة البيانات', 'Data version');
   String get checkUpdate => _t('التحقق من تحديث التعرفة', 'Check for tariff update');
   String get updated => _t('تم تحديث التعرفة من موقع ميدترانس.', 'Tariff updated from mid-trans.com.');
@@ -50,24 +50,24 @@ class S {
   String get miraOffline => _t('ميرا تحتاج اتصالاً بالإنترنت. البحث في التعرفة يعمل بدونه.', 'MIRA needs an internet connection. Tariff search works without it.');
   String get miraSubtitle => _t('مساعدة ميدترانس · ذكاء اصطناعي', 'MIDTRANS assistant · AI');
   String get miraHello => _t(
-      'أهلاً، أنا ميرا من ميدترانس. اسألني عن أي بند في التعرفة السورية، أو عن شحن بضاعتك.',
-      'Hi, I am MIRA from MIDTRANS. Ask me about any code in the Syrian tariff, or about shipping your goods.');
+      'أهلاً، أنا ميرا من ميدترانس. اسألني عن أي بند في التعرفة الجمركية الخليجية، أو عن شحن بضاعتك إلى دول الخليج.',
+      'Hi, I am MIRA from MIDTRANS. Ask me about any code in the GCC customs tariff, or about shipping your goods to the Gulf.');
   String get miraHint => _t('اكتب سؤالك…', 'Type your question…');
   String get miraThinking => _t('ميرا تكتب…', 'MIRA is typing…');
   String get miraNew => _t('محادثة جديدة', 'New chat');
   String get miraTeam => _t('تحدّث مع فريق ميدترانس على واتساب', 'Talk to the MIDTRANS team on WhatsApp');
   String get miraNote => _t('إجابات ميرا للاسترشاد، والرسوم النهائية تؤكدها الجمارك.', 'MIRA\'s answers are guidance; final fees are confirmed by customs.');
   List<String> get miraSuggestions => en
-      ? const ['Import fees for coffee into Syria?', 'Is code 8703 on Syria\'s negative list?', 'How do I ship a container to Syria?']
-      : const ['ما رسوم استيراد القهوة إلى سوريا؟', 'هل البند 8703 في القائمة السلبية السورية؟', 'كيف أشحن حاوية إلى سوريا؟'];
-  String codeNotFound(String code) => _t('البند $code غير موجود في التعرفة السورية', 'Code $code is not in the Syrian tariff');
+      ? const ['Customs duty on cars into Saudi Arabia?', 'Which goods are prohibited in the GCC tariff?', 'How do I ship a container to Dubai?']
+      : const ['ما الرسم الجمركي على السيارات في السعودية؟', 'ما البضائع الممنوع استيرادها في التعرفة الخليجية؟', 'كيف أشحن حاوية إلى دبي؟'];
+  String codeNotFound(String code) => _t('البند $code غير موجود في التعرفة الخليجية', 'Code $code is not in the GCC tariff');
   String get trimDigits => _t(
       'احذف آخر خانتين أو أكثر من الرقم لترى البنود المتاحة تحته، ثم اختر البند الأقرب لبضاعتك.',
       'Delete the last two digits or more to see the codes available under it, then pick the one closest to your goods.');
   String tryCode(String code) => _t('جرّب $code', 'Try $code');
   String get hsWorldwide => _t(
-      'تذكير: أول 6 أرقام من البند (النظام المنسّق HS) عالمية وموحّدة بين الدول، أما الخانات التفصيلية بعدها فتختلف من دولة إلى أخرى. لذلك قد لا يطابق رقمٌ من بلد آخر التعرفة السورية كاملاً.',
-      'Reminder: the first 6 digits of a code (the Harmonized System, HS) are the same worldwide; the detailed digits after them differ from country to country, so a full code from another country may not match the Syrian tariff.');
+      'تذكير: أول 6 أرقام من البند (النظام المنسّق HS) عالمية وموحّدة بين الدول، أما الخانات التفصيلية بعدها فتختلف من دولة إلى أخرى. لذلك قد لا يطابق رقمٌ من بلد آخر التعرفة الخليجية كاملاً.',
+      'Reminder: the first 6 digits of a code (the Harmonized System, HS) are the same worldwide; the detailed digits after them differ from country to country, so a full code from another country may not match the GCC tariff.');
   String get myAccount => _t('حسابي', 'My account');
   String get signInTitle => _t('سجّل دخولك', 'Sign in');
   String get signInWhy => _t(
@@ -132,7 +132,7 @@ class S {
   String get saved => _t('تم الحفظ.', 'Saved.');
   String get settings => _t('الإعدادات', 'Settings');
   String get newsletterTitle => _t('نشرة البنود الجمركية', 'Tariff newsletter');
-  String get newsletterHint => _t('إشعار عند تعديل رسوم البنود أو صدور مرسوم جديد.', 'A notification when code fees change or a new decree is issued.');
+  String get newsletterHint => _t('إشعار عند تعديل رسوم البنود في التعرفة الخليجية.', 'A notification when duties in the GCC tariff change.');
   String get signOut => _t('تسجيل الخروج', 'Sign out');
   String get deleteAccount => _t('حذف الحساب', 'Delete account');
   String get deleteAccountWarn => _t('سيُحذف حسابك وملفك واشتراكك في النشرة نهائياً.', 'Your account, profile and newsletter subscription will be deleted for good.');
@@ -150,11 +150,22 @@ class S {
   String rateQuestion(String container, String from, String to) => _t(
       'أريد عرض سعر شحن حاوية $container من $from إلى $to',
       'I would like a quote to ship a $container container from $from to $to');
-  List<String> get miraCountries => en ? const ['Syria'] : const ['سوريا'];
-  String gulfAnswer(String url) => _t(
-      'هذا التطبيق مخصص للتعرفة الجمركية السورية. التعرفة الجمركية الخليجية الموحّدة موجودة على موقع ميدترانس: $url',
-      'This app covers the Syrian customs tariff. The unified GCC customs tariff is on the MIDTRANS website: $url');
-  String askAboutCode(String code) => _t('ما رسوم البند $code في سوريا؟', 'What are the fees for code $code in Syria?');
+  List<String> get miraCountries => en
+      ? const ['Saudi Arabia', 'UAE', 'Kuwait', 'Qatar', 'Bahrain', 'Oman']
+      : const ['السعودية', 'الإمارات', 'الكويت', 'قطر', 'البحرين', 'عُمان'];
+  String get gccStates => _t('دول مجلس التعاون الخليجي الست', 'The six GCC states');
+  String syriaAnswer(String app, String page) => _t(
+      'هذا التطبيق مخصص للتعرفة الجمركية الخليجية الموحّدة. للتعرفة السورية حمّل تطبيق ميدترانس للتعرفة الجمركية السورية: $app\nأو افتح صفحتها: $page',
+      'This app covers the unified GCC customs tariff. For the Syrian tariff, get the MIDTRANS Syrian Customs Tariff app: $app\nor open its page: $page');
+  String askAboutCode(String code) => _t('ما الرسم الجمركي للبند $code في التعرفة الخليجية؟', 'What is the GCC customs duty for code $code?');
+  String get calcTitle => _t('احسب الرسم بالدولار', 'Work out the duty in USD');
+  String get calcLabel => _t('القيمة الجمركية (CIF) بالدولار', 'Customs value (CIF) in USD');
+  String get calcHint => _t('مثال: 10000', 'e.g. 10000');
+  String calcResult(String duty, String pct) => _t('الرسم الجمركي التقريبي: $duty دولار ($pct)', 'Approximate customs duty: $duty USD ($pct)');
+  String get calcNote => _t(
+      'تقدير للاسترشاد: لا يشمل ضريبة القيمة المضافة أو الضريبة الانتقائية أو رسوم الخدمات في دولة الوصول.',
+      'An estimate for guidance: it leaves out VAT, excise tax and service charges in the destination state.');
+  String heading(String h) => _t('البند $h', 'Heading $h');
   String get retry => _t('إعادة المحاولة', 'Retry');
   String get language => _t('English', 'العربية');
   String get privacy => _t('سياسة الخصوصية', 'Privacy policy');

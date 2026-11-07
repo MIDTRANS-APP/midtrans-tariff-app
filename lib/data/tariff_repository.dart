@@ -11,21 +11,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
 import 'tariff_models.dart';
 
-/// Loads the Syrian tariff: the last copy downloaded from mid-trans.com if there is
+/// Loads the GCC unified tariff: the last copy downloaded from mid-trans.com if there is
 /// one, else the snapshot bundled in the app; then checks the website for a newer
 /// file in the background. The file is read as published — never edited here.
 class TariffRepository {
   TariffRepository({http.Client? client}) : _client = client ?? http.Client();
 
   final http.Client _client;
-  static const _cacheFile = 'syrian-hs-code-tariff.json';
+  static const _cacheFile = 'gcc-customs-tariff.json';
   static const _etagKey = 'tariff_etag';
   static const _checkedKey = 'tariff_checked_at';
 
   /// A downloaded file replaces the saved copy only if it has about the size of the
   /// tariff, as many lines as it declares, and a code on every line.
   static bool looksComplete(TariffData d) {
-    final declared = d.source.recordCount;
+    final declared = d.declaredCount;
     return d.rows.length >= AppConfig.minTariffRows &&
         (declared == null || declared == d.rows.length) &&
         d.rows.every((r) => r.code.isNotEmpty);
@@ -33,7 +33,19 @@ class TariffRepository {
 
   Future<File> _cachePath() async => File('${(await getApplicationSupportDirectory()).path}/$_cacheFile');
 
+  /// Bundled search helpers; the app works without them if they fail to load.
+  Future<void> loadContext() async {
+    try {
+      final bytes = await rootBundle.load(AppConfig.hsContextAsset);
+      final text = utf8.decode(GZipDecoder().decodeBytes(bytes.buffer.asUint8List()));
+      HsContext.current = HsContext.fromJson(jsonDecode(text) as Map<String, dynamic>);
+    } catch (_) {
+      HsContext.current = HsContext.empty;
+    }
+  }
+
   Future<TariffData> loadLocal() async {
+    if (identical(HsContext.current, HsContext.empty)) await loadContext();
     try {
       final f = await _cachePath();
       if (await f.exists()) {

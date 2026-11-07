@@ -128,10 +128,10 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(children: [
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
-            // Emblem of the General Authority for Borders and Customs, used with its written permission.
+            // The six GCC states (no official emblem is used in this app).
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Image(image: const AssetImage('assets/branding/ports-emblem.png'), height: 32, semanticLabel: s.authority),
+              child: Text('🇸🇦 🇦🇪 🇰🇼 🇶🇦 🇧🇭 🇴🇲', style: const TextStyle(fontSize: 20), semanticsLabel: s.gccStates),
             ),
             Container(width: 80, height: 1, color: const Color(0xFF8F8361)),
           ]),
@@ -211,7 +211,7 @@ class _SearchScreenState extends State<SearchScreen> {
     ];
   }
 
-  /// A code with no line in the Syrian table: ask to drop the last two digits or more,
+  /// A code with no line in the GCC table: ask to drop the last two digits or more,
   /// offer the shorter codes that do exist, and remind that only the first six digits
   /// (HS) are international (owner 2026-10-28).
   Widget _codeNotFound(AppState app, String digits) {

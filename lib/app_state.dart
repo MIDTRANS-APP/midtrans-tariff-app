@@ -69,6 +69,9 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
+  @visibleForTesting
+  void useForTest(TariffData d) => _use(d);
+
   void _use(TariffData d) {
     data = d;
     _search = TariffSearch(d.rows);

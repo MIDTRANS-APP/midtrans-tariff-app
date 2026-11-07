@@ -1,5 +1,5 @@
-name: midtrans_tariff
-description: "Syrian customs tariff by MIDTRANS"
+name: midtrans_gcc_tariff
+description: "GCC unified customs tariff by MIDTRANS"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -67,10 +67,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/data/syria-tariff.json.gz
+    - assets/data/gcc-tariff.json.gz
+    - assets/data/hs-context.json.gz
     - assets/branding/app-icon-96.png
-    - assets/branding/ports-emblem.png
-    - assets/branding/ports-logo.png
   fonts:
     - family: Cairo
       fonts:

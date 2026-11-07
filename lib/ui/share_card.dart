@@ -86,7 +86,7 @@ class CodeCard extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(en ? 'Syrian Customs Tariff' : 'التعرفة الجمركية السورية',
+            child: Text(en ? 'GCC Customs Tariff' : 'التعرفة الجمركية الخليجية',
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.goldText)),
           ),
         ]),

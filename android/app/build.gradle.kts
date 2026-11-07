@@ -18,7 +18,7 @@ android {
 
     defaultConfig {
         // Permanent store identity: never change after the first upload.
-        applicationId = "com.midtrans.syriantariff"
+        applicationId = "com.midtrans.gcctariff"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

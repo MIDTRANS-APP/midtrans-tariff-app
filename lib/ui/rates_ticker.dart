@@ -94,7 +94,7 @@ class _RatesTickerState extends State<RatesTicker> with SingleTickerProviderStat
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Row(children: [
-                      Text(r.toSyria ? '🇸🇾' : '⚓', style: const TextStyle(fontSize: 13)),
+                      Text(r.flag, style: const TextStyle(fontSize: 13)),
                       const SizedBox(width: 6),
                       Text('${r.from} → ${r.to}', textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 12.5, color: AppColors.text)),
                       const SizedBox(width: 6),

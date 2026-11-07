@@ -54,10 +54,16 @@ List<String> _words(String s) => normalizeText(s).split(' ').where((w) => w.isNo
 class _Indexed {
   _Indexed(this.row)
       : ar = normalizeText(row.text('description', 'ar')),
-        en = normalizeText(row.text('description', 'en'));
+        en = normalizeText(row.text('description', 'en')),
+        ctx = normalizeText(
+            '${HsContext.current.hs6(row.code.length >= 6 ? row.code.substring(0, 6) : row.code, 'ar')} ${HsContext.current.hs6(row.code.length >= 6 ? row.code.substring(0, 6) : row.code, 'en')}');
   final TariffRow row;
   final String ar;
   final String en;
+
+  /// Worldwide wording of the line's 6-digit HS: GCC lines are often short («- Of Arab
+  /// breed males»), so «horses» still finds them. Weighs less than the line's own words.
+  final String ctx;
 }
 
 class TariffSearch {
@@ -102,10 +108,17 @@ class TariffSearch {
     return scored.take(limit).map((e) => e.$2.row).toList();
   }
 
-  // whole word 3, word prefix 2, inside a word 1 (Arabic attached prefixes: ال، و، ب…)
+  // own words: whole word 6, word prefix 4, inside a word 2 (Arabic attached prefixes:
+  // ال، و، ب…); the same in the HS6 wording counts 3, 2, 1.
   static int _termScore(_Indexed i, String t) {
+    final own = _textScore([i.ar, i.en], t);
+    if (own > 0) return own * 2;
+    return _textScore([i.ctx], t);
+  }
+
+  static int _textScore(List<String> texts, String t) {
     var best = 0;
-    for (final text in [i.ar, i.en]) {
+    for (final text in texts) {
       if (text.isEmpty) continue;
       for (final w in text.split(' ')) {
         if (w == t) return 3;

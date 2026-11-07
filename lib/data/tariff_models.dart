@@ -1,4 +1,21 @@
-/// One line of the published Syrian tariff, kept exactly as the file gives it.
+/// Search and browsing helpers bundled with the app (assets/data/hs-context.json.gz):
+/// chapter -> section name, 6-digit HS (the same worldwide) -> its wording. Never figures.
+class HsContext {
+  HsContext._(this._chapters, this._hs6);
+  static HsContext empty = HsContext._(const {}, const {});
+  static HsContext current = empty;
+
+  final Map<String, dynamic> _chapters;
+  final Map<String, dynamic> _hs6;
+
+  static HsContext fromJson(Map<String, dynamic> j) => HsContext._(
+      Map<String, dynamic>.from(j['chapters'] as Map? ?? const {}), Map<String, dynamic>.from(j['hs6'] as Map? ?? const {}));
+
+  String section(String chapter, String lang) => ((_chapters[chapter] as Map?)?[lang] ?? '').toString();
+  String hs6(String code6, String lang) => ((_hs6[code6] as Map?)?[lang] ?? '').toString();
+}
+
+/// One line of the published GCC unified tariff, kept exactly as the file gives it.
 class TariffRow {
   TariffRow(this.raw);
 
@@ -12,14 +29,34 @@ class TariffRow {
     return '';
   }
 
-  /// Description in [lang], falling back to the other language when missing.
+  /// Description in [lang], falling back to the other language when missing. The
+  /// file's outline dashes («- - ») are dropped for display.
   String description(String lang) {
-    final first = text('description', lang);
-    if (first.isNotEmpty) return first;
-    return text('description', lang == 'ar' ? 'en' : 'ar');
+    var first = text('description', lang);
+    if (first.isEmpty) first = text('description', lang == 'ar' ? 'en' : 'ar');
+    return stripDashes(first);
   }
 
-  String category(String lang) => text('category', lang);
+  static String stripDashes(String t) => t.replaceFirst(RegExp(r'^[\s\-–—]+'), '').trim();
+
+  /// Section the chapter belongs to (from [HsContext]); the file's own label otherwise.
+  String category(String lang) {
+    final sec = HsContext.current.section(chapter, lang);
+    return sec.isNotEmpty ? sec : text('category', lang);
+  }
+
+  /// 4-digit heading shown as 01.01.
+  String get heading => code.length >= 4 ? '${code.substring(0, 2)}.${code.substring(2, 4)}' : code;
+  String get importStatus => (raw['import_status'] ?? '').toString();
+  String get notesText => (raw['notes'] ?? '').toString();
+
+  /// Duty as a number (5 for 5%), when the line has a percentage.
+  double? get dutyPercent {
+    if (dutyStatus != 'percent') return null;
+    final v = raw['duty_rate'];
+    if (v is num) return v.toDouble();
+    return double.tryParse(text('duty_rate', 'en').replaceAll('%', '').trim());
+  }
   String get dutyStatus => (raw['duty_status'] ?? '').toString();
   String get totalFeeStatus => (raw['total_fee_status'] ?? '').toString();
   String get sourceStatus => (raw['source_status'] ?? '').toString();
@@ -36,12 +73,13 @@ class TariffRow {
     return list.map((e) => e.replaceAll(RegExp(r'\D'), '')).where((e) => e.isNotEmpty).toList();
   }
 
-  /// 8-digit code shown as 0000.00.00.
+  /// 12-digit code shown as 0000.00.00.0000 (HS 6 · GCC 8 · national 12).
   String get displayCode {
     final c = code;
     if (c.length <= 4) return c;
     if (c.length <= 6) return '${c.substring(0, 4)}.${c.substring(4)}';
-    return '${c.substring(0, 4)}.${c.substring(4, 6)}.${c.substring(6)}';
+    if (c.length <= 8) return '${c.substring(0, 4)}.${c.substring(4, 6)}.${c.substring(6)}';
+    return '${c.substring(0, 4)}.${c.substring(4, 6)}.${c.substring(6, 8)}.${c.substring(8)}';
   }
 
   String get chapter => code.length >= 2 ? code.substring(0, 2) : code;
@@ -60,7 +98,10 @@ class TariffSource {
 }
 
 class TariffData {
-  TariffData({required this.source, required this.rows, required this.origin});
+  TariffData({required this.source, required this.rows, required this.origin, this.declaredCount});
+
+  /// Number of lines the file says it has (GCC file: top-level «count»).
+  final int? declaredCount;
 
   final TariffSource source;
   final List<TariffRow> rows;
@@ -75,8 +116,11 @@ class TariffData {
         .where((r) => r.code.isNotEmpty)
         .toList()
       ..sort((a, b) => a.code.compareTo(b.code));
-    final source = json['source'] is Map ? Map<String, dynamic>.from(json['source'] as Map) : <String, dynamic>{};
-    return TariffData(source: TariffSource(source), rows: rows, origin: origin);
+    // the GCC file gives its source as a sentence; the Syrian one as a block
+    final src = json['source'];
+    final source = src is Map ? Map<String, dynamic>.from(src) : <String, dynamic>{'name': src?.toString() ?? ''};
+    final count = json['count'] is int ? json['count'] as int : TariffSource(source).recordCount;
+    return TariffData(source: TariffSource(source), rows: rows, origin: origin, declaredCount: count);
   }
 
   /// Latest review date across the source block and the rows.

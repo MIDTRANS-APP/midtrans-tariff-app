@@ -1,3 +1,15 @@
+# GCC Customs Tariff · MIDTRANS (com.midtrans.gcctariff)
+
+Started 2026-11-07 as a copy of the Syrian tariff app (owner: «نفس تطبيق السوري … لدول الخليج»).
+Same screens; data = https://www.mid-trans.com/reference/gcc-customs-tariff/gcc-customs-tariff.json
+(13,431 lines, 12-digit codes, duty as % of CIF). Bundled data: `python3 tools/build_assets.py`.
+Item page has a USD duty calculator (owner: «نسبة فقط + حاسبة بالدولار»). No government emblem.
+
+Still on the Syrian app's accounts until the owner registers this app: Firebase
+(lib/firebase_options.dart, iOS URL scheme in Info.plist), Facebook app id, Apple Sign-in Services ID.
+
+---
+
 # التعرفة الجمركية السورية — ميدترانس
 
 تطبيق Flutter واحد لـ Google Play وApp Store وHuawei AppGallery، للبحث في التعرفة الجمركية السورية بالعربية والإنكليزية، ويعمل بدون إنترنت. تطبيق غير رسمي من MIDTRANS، وليس تابعاً لأي جهة حكومية.
