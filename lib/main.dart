@@ -8,6 +8,7 @@ import 'ui/about_screen.dart';
 import 'ui/customs_screen.dart';
 import 'ui/favorites_screen.dart';
 import 'ui/mira_screen.dart';
+import 'ui/news_prompt.dart';
 import 'ui/search_screen.dart';
 import 'ui/theme.dart';
 
@@ -76,12 +77,47 @@ class _HomeShellState extends State<HomeShell> {
         await Future<void>.delayed(const Duration(milliseconds: 100));
       }
       if (!mounted) return;
+      if (Shot.demo) return _playDemo();
       if (code.isNotEmpty) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => ItemScreen(code: code)));
+      } else if (Shot.mode == 'news') {
+        NewsPrompt.show(context, null);
+      } else if (Shot.mode == 'team') {
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MiraScreen(standalone: true, askTeam: true)));
       } else if (q.isNotEmpty) {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => MiraScreen(standalone: true, question: q)));
       }
     });
+  }
+
+  /// SHOT=demo: about 25 seconds of the app in use, recorded for the App Store preview.
+  Future<void> _playDemo() async {
+    Future<void> wait(int ms) => Future<void>.delayed(Duration(milliseconds: ms));
+    Future<void> typeInto(ValueNotifier<String?> n, String text, int ms) async {
+      for (var i = 1; i <= text.length; i++) {
+        n.value = text.substring(0, i);
+        await wait(ms);
+      }
+    }
+
+    await wait(8000); // time to start the screen recording
+    await wait(1500);
+    await typeInto(Shot.query, 'مكيف هواء', 260);
+    await wait(2200);
+    if (!mounted) return;
+    final nav = Navigator.of(context);
+    nav.push(MaterialPageRoute(builder: (_) => const ItemScreen(code: '841510109999')));
+    await wait(2200);
+    await typeInto(Shot.calcFeed, '12000', 300);
+    await wait(3000);
+    nav.pop();
+    await wait(900);
+    if (!mounted) return;
+    setState(() => _tab = 2);
+    await wait(3000);
+    if (!mounted) return;
+    nav.push(MaterialPageRoute(
+        builder: (_) => const MiraScreen(standalone: true, question: 'كم الرسم الجمركي على المكيفات في السعودية؟')));
   }
 
   @override

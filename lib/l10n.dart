@@ -59,11 +59,63 @@ class S {
   String get miraHint => _t('اكتب سؤالك…', 'Type your question…');
   String get miraThinking => _t('ميرا تكتب…', 'MIRA is typing…');
   String get miraNew => _t('محادثة جديدة', 'New chat');
-  String get miraTeam => _t('تحدّث مع فريق ميدترانس على واتساب', 'Talk to the MIDTRANS team on WhatsApp');
+  String get miraTeam => _t('التحدث مع خبير جمركي', 'Talk to a customs expert');
+  String get miraWhatsApp => _t('مراسلتنا على واتساب', 'Message us on WhatsApp');
+
+  // The contact step and the request, in the words of MIRA's web chat (chat.midtrans.org):
+  // one MIRA, one set of visitor details for every app (owner 2026-11-10).
+  String get contactIntro => _t('البحث في البنود الجمركية متاح لك دون أي بيانات. أما للتحدث معي ومع خبير جمركي من ميدترانس، فأحتاج بعض بياناتك ليتابع معك الخبير عند الحاجة:',
+      'Searching the customs codes needs no details. To talk with me and a MIDTRANS customs expert, I need a few details so the expert can follow up with you:');
+
+  // The news popup (owner 2026-11-10): the same details MIRA asks, for periodic customs news.
+  String get newsTitle => _t('أخبار جمركية خليجية', 'GCC customs news');
+  String get newsText => _t('سجّل بياناتك لتصلك أخبار التعرفة الجمركية الخليجية وتعديلاتها دورياً عبر واتساب أو البريد الإلكتروني. هي البيانات نفسها التي تطلبها ميرا، فتتحدث بعدها مع ميرا وخبير جمركي مباشرة. البحث في البنود يبقى متاحاً دون تسجيل.',
+      'Register to receive GCC customs tariff news and changes periodically by WhatsApp or email. These are the same details MIRA asks for, so you can then talk to MIRA and a customs expert right away. Searching codes stays open without registering.');
+  String get newsRegister => _t('سجّل بياناتي', 'Register my details');
+  String get newsLater => _t('لاحقاً', 'Later');
+  String get newsDone => _t('تم التسجيل. ستصلك أخبار التعرفة الجمركية الخليجية عبر واتساب أو البريد الإلكتروني.', 'Registered. The GCC customs tariff news will reach you by WhatsApp or email.');
+  String get contactFirst => _t('أكمل بياناتك أولاً للتحدث مع ميرا', 'Complete your details first to talk to MIRA');
+  String get contactName => _t('الاسم', 'Name');
+  String get contactCountry => _t('البلد', 'Country');
+  String get contactPhone => _t('رقم الهاتف', 'Phone number');
+  String get contactWhatsApp => _t('رقم واتساب', 'WhatsApp number');
+  String get contactWhatsAppCountry => _t('بلد رقم الواتساب', 'WhatsApp country');
+  String get contactSame => _t('رقم الواتساب هو نفسه رقم الهاتف', 'My WhatsApp is the same number');
+  String get contactEmail => _t('البريد الإلكتروني', 'Email');
+  String get contactSend => _t('متابعة', 'Continue');
+  String get contactBadWhatsApp => _t('أدخل رقم واتساب صحيحاً.', 'Please enter a valid WhatsApp number.');
+  String get contactNoEmail => _t('اكتب بريدك الإلكتروني.', 'Please type your email.');
+  String get contactNoName => _t('اكتب اسمك لو سمحت.', 'Please type your name.');
+  String get contactNoCountry => _t('اختر البلد أولاً.', 'Please select a country.');
+  String get contactBadPhone => _t('أدخل رقم هاتف صحيح.', 'Please enter a valid phone number.');
+  String get contactBadEmail => _t('البريد الإلكتروني غير صحيح.', 'That email does not look right.');
+  String get contactSaved => _t('تُحفظ بياناتك على هاتفك فلا نسألك عنها مرة أخرى، وتصل إلى ميدترانس فقط.',
+      'Your details stay on this phone so we do not ask again, and go to MIDTRANS only.');
+  String get sending => _t('جارٍ الإرسال…', 'Sending…');
+
+  /// The one closing message of a request (MIRA's closingText and promiseLine).
+  String requestSent({String? number, required bool online, String? replyBy, required bool emailed}) {
+    final parts = <String>[];
+    if (number != null) parts.add(_t('رقم طلبك \u2068$number\u2069.', 'Your request number is $number.'));
+    if (online || replyBy == 'online') {
+      parts.add(_t('سيتواصل معك خبير جمركي من ميدترانس بأسرع وقت.', 'A MIDTRANS customs expert will contact you as soon as possible.'));
+      parts.add(_t('يوجد خبير متصل الآن.', 'An expert is online now.'));
+    } else {
+      parts.add(_t('سيرد عليك خبير جمركي من ميدترانس بأقرب وقت.', 'A MIDTRANS customs expert will reply as soon as possible.'));
+    }
+    parts.add(number != null
+        ? _t('يمكنك أيضاً مراسلتنا على واتساب بذكر هذا الرقم.', 'You can also message us on WhatsApp with this number.')
+        : _t('يمكنك أيضاً مراسلتنا على واتساب.', 'You can also message us on WhatsApp.'));
+    if (number != null && emailed) {
+      parts.add(_t('وأرسلنا إلى بريدك رسالة فيها رقم طلبك؛ إن لم تصلك خلال دقائق فيُرجى التحقق من مجلد الرسائل غير المرغوب فيها.',
+          "We've also emailed you your request number; if it isn't in your inbox within a few minutes, please check your spam folder."));
+    }
+    return parts.join(' ');
+  }
   String get miraNote => _t('إجابات ميرا للاسترشاد، والرسوم النهائية تؤكدها الجمارك.', 'MIRA\'s answers are guidance; final fees are confirmed by customs.');
   List<String> get miraSuggestions => en
-      ? const ['Customs duty on cars into Saudi Arabia?', 'Which goods are prohibited in the GCC tariff?', 'How do I ship a container to Dubai?']
-      : const ['ما الرسم الجمركي على السيارات في السعودية؟', 'ما البضائع الممنوع استيرادها في التعرفة الخليجية؟', 'كيف أشحن حاوية إلى دبي؟'];
+      ? const ['Customs duty on cars into Saudi Arabia?', 'Which goods are prohibited in the GCC tariff?', 'I want a quote to ship my goods to the Gulf']
+      : const ['ما الرسم الجمركي على السيارات في السعودية؟', 'ما البضائع الممنوع استيرادها في التعرفة الخليجية؟', 'أريد عرض سعر لشحن بضاعتي إلى الخليج'];
   String codeNotFound(String code) => _t('البند $code غير موجود في التعرفة الخليجية', 'Code $code is not in the GCC tariff');
   String get trimDigits => _t(
       'احذف آخر خانتين أو أكثر من الرقم لترى البنود المتاحة تحته، ثم اختر البند الأقرب لبضاعتك.',

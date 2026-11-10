@@ -51,9 +51,14 @@
 
 > The app is an unofficial reference to the GCC unified customs tariff by MIDTRANS, a freight forwarder. It is not affiliated with any government; this is stated in the app (About) and in the description. The tariff data is the public reference file published on mid-trans.com and works offline. Sign-in is optional: the reviewer can use search, item pages, the USD duty calculator, the Customs links tab and MIRA without an account, or create an email account from the account icon (top left) and delete it from Account › Delete account.
 
+## App Store Connect (2026-11-08)
+
+أُنشئ التطبيق (Apple ID 6832080600، SKU gcctariff، لغة عربية) ورُفع البناء 1.0.0 (1) ورُبط بالإصدار 1.0.
+عُبّئ: النص الترويجي، الوصف، الكلمات (`تعريفة,جمرك,بند جمركي,HS,استيراد,تخليص,شحن,السعودية,الإمارات,الكويت,قطر,البحرين,عمان,GCC,customs`)، العنوان الفرعي «رسوم الجمارك لدول الخليج الست»، الفئة Business + Reference، روابط الدعم والتسويق، حقوق النشر، بيانات التواصل، ملاحظات المراجع، إصدار يدوي، 10 لقطات آيفون وفيديو معاينة 27 ثانية (`store/video/gcc-preview.mp4`، يُعاد تسجيله بـ `--dart-define=SHOT=demo`).
+
 ## ما بقي عليك
 
-1. **App Store Connect:** إنشاء تطبيق جديد واختيار المعرّف `com.midtrans.gcctariff` (أُنشئ في Apple Developer أثناء الأرشفة)، ثم أرفع الأرشيف.
+1. **App Store Connect:** حساب تجريبي للمراجع (Sign-in required)، Content Rights، Age Rating، App Privacy، Pricing (مجاني)، ثم Add for Review.
 2. **Google Play Console:** إنشاء تطبيق جديد، رفع الـAAB، ثم إضافة بصمة SHA-1 لمفتاح توقيع Play إلى Firebase (لتسجيل الدخول بجوجل).
 3. **Huawei AppGallery:** إنشاء تطبيق جديد ورفع الـAPK.
 4. **فيسبوك (اختياري):** إضافة `com.midtrans.gcctariff` إلى تطبيق Meta، ثم أشغّل زر فيسبوك.

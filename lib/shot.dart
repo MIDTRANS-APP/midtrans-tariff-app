@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 /// Store screenshots on the simulator (debug builds only, never in a store build):
 ///   SIMCTL_CHILD_SHOT='search:اسمنت' xcrun simctl launch booted com.midtrans.gcctariff
-/// SHOT = home, search:QUERY, item:CODE, mira:QUESTION, favorites or about
+/// SHOT = demo (plays search, item, calculator, Customs, MIRA for the preview video), home, search:QUERY, item:CODE, mira:QUESTION, favorites or about
 /// SHOT_LANG = ar | en ; SHOT_CALC = a value typed into the item page calculator.
 class Shot {
   static const _defines = {
@@ -19,5 +19,11 @@ class Shot {
   static bool get on => mode.isNotEmpty;
   static String get lang => _env('SHOT_LANG').isEmpty ? 'ar' : _env('SHOT_LANG');
   static String get calc => _env('SHOT_CALC');
+  static bool get demo => mode == 'demo';
+
+  /// Demo mode (SHOT=demo, for the store preview video): text the screens pick up as if typed.
+  static final query = ValueNotifier<String?>(null);
+  static final calcFeed = ValueNotifier<String?>(null);
+
   static String arg(String prefix) => mode.startsWith('$prefix:') ? mode.substring(prefix.length + 1) : '';
 }

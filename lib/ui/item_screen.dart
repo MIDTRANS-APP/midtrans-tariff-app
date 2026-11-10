@@ -8,6 +8,7 @@ import '../data/fee_text.dart';
 import '../data/search.dart' show asciiDigits;
 import '../data/tariff_models.dart';
 import 'mira_screen.dart';
+import 'news_prompt.dart';
 import 'share_card.dart';
 import 'motion.dart';
 import 'theme.dart';
@@ -33,7 +34,8 @@ class ItemScreen extends StatelessWidget {
     void openMira() => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => MiraScreen(standalone: true, code: row.code, displayCode: row.displayCode)));
 
-    return Scaffold(
+    // from the third code page: the suggestion to register for periodic customs news
+    return NewsPromptHook(child: Scaffold(
       appBar: AppBar(
         title: Text(s.itemTitle),
         actions: [
@@ -131,7 +133,7 @@ class ItemScreen extends StatelessWidget {
         const SizedBox(height: 16),
         const AdSlot(AdPlacement.itemBanner),
       ]),
-    );
+    ));
   }
 }
 
@@ -149,7 +151,19 @@ class _DutyCalculatorState extends State<_DutyCalculator> {
   final _value = TextEditingController(text: Shot.calc);
 
   @override
+  void initState() {
+    super.initState();
+    if (Shot.demo) Shot.calcFeed.addListener(_demoCalc);
+  }
+
+  void _demoCalc() {
+    final v = Shot.calcFeed.value;
+    if (v != null && mounted) setState(() => _value.text = v);
+  }
+
+  @override
   void dispose() {
+    Shot.calcFeed.removeListener(_demoCalc);
     _value.dispose();
     super.dispose();
   }

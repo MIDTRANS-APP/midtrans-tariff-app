@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -5,13 +7,17 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_state.dart';
 import '../config.dart';
 import '../data/mira_client.dart';
+import 'contact_card.dart';
 import 'motion.dart';
 import 'theme.dart';
 
 /// MIRA drawn by the app in its own design, talking to MIRA's brain directly
 /// (owner 2026-10-28: «خذ API لميرا و اعمل انتغريت بتصميم التطبيق»).
 class MiraScreen extends StatefulWidget {
-  const MiraScreen({super.key, this.standalone = false, this.code, this.displayCode, this.question});
+  const MiraScreen({super.key, this.standalone = false, this.code, this.displayCode, this.question, this.askTeam = false});
+
+  /// Opens on the contact step (the screenshot mode's «team»).
+  final bool askTeam;
 
   /// Pushed from a code page (own app bar, own bottom inset) rather than shown as a tab.
   final bool standalone;
@@ -28,12 +34,18 @@ class MiraScreen extends StatefulWidget {
 }
 
 class _Line {
-  _Line(this.mine, this.text, {this.handoff = false, this.failed = false})
-      : asksCountry = !mine && !failed && _countryQuestion.hasMatch(text);
+  _Line(this.mine, this.text, {this.handoff = false, this.failed = false, this.contact = false, this.filed = false})
+      : asksCountry = !mine && !failed && !contact && !filed && _countryQuestion.hasMatch(text);
   final bool mine;
   final String text;
   final bool handoff;
   final bool failed;
+
+  /// MIRA asks for the visitor's details: the contact card follows this line.
+  final bool contact;
+
+  /// The request went to the team: WhatsApp is offered under it.
+  final bool filed;
 
   /// MIRA asks which destination country: the app offers the six GCC states as buttons.
   final bool asksCountry;
@@ -45,6 +57,17 @@ class _Line {
 
 class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMixin {
   final _client = MiraClient();
+  late final _mirror = MiraMirror(_client);
+  MiraLead? _lead;
+  bool _filing = false;
+
+  /// Every field is asked before the chat (owner 2026-11-10): what the visitor asked
+  /// meanwhile waits here and goes once the details are in.
+  bool _leadLoaded = false;
+  String? _heldText;
+  String? _heldCode;
+  bool _heldTeam = false;
+  bool get _needsDetails => _leadLoaded && _lead?.complete != true;
   final _input = TextEditingController();
   final _scroll = ScrollController();
   final _lines = <_Line>[];
@@ -53,6 +76,10 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   static final _syria = RegExp(
       r'(سوريا|سورية|السوري|السورية|دمشق|اللاذقية|طرطوس|Syria|Syrian|Damascus|Latakia|Tartous)',
       caseSensitive: false);
+  // Only a tariff question about Syria gets the Syrian tariff app: «شحن من دبي إلى دمشق»
+  // is a shipment for MIRA (owner 2026-11-10).
+  static final _tariffWords = RegExp(r'(تعرفة|تعريفة|رسم|رسوم|جمرك|بند|customs|tariff|duty|duties|HS)', caseSensitive: false);
+  static final _teamAsk = RegExp(r'^\s*(موظف|التحدث مع|تحدث مع|كلم|أكلم|اكلم|بدي احكي|فريق ميدترانس|خبير|talk to (a |the )?(human|team|agent|staff|expert)|agent|human|expert)', caseSensitive: false);
   String? _lastQuestion;
   String? _lastCode;
 
@@ -62,6 +89,14 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   @override
   void initState() {
     super.initState();
+    _client.savedLead().then((l) {
+      if (!mounted) return;
+      setState(() {
+        _leadLoaded = true;
+        if (l != null) _lead = _mirror.lead = l;
+      });
+      _releaseHeld();
+    });
     if (widget.code != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final s = AppScope.of(context).s;
@@ -69,11 +104,14 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
       });
     } else if (widget.question != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _send(widget.question!));
+    } else if (widget.askTeam) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _askTeam());
     }
   }
 
   @override
   void dispose() {
+    _mirror.flush();
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -83,6 +121,29 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     final q = text.trim();
     if (q.isEmpty || _busy) return;
     final app = AppScope.of(context);
+    _mirror.lang = app.lang;
+    if (!_leadLoaded || _needsDetails) {
+      // the details first; the question goes right after them
+      setState(() {
+        _heldText = q;
+        _heldCode = code;
+      });
+      _input.clear();
+      return;
+    }
+    // «Talk to the team» typed: the request, as the button does.
+    if (code == null && q.length <= 40 && _teamAsk.hasMatch(q)) {
+      setState(() => _lines.add(_Line(true, q)));
+      _input.clear();
+      _mirror.note(visitor: true, text: q);
+      _askTeam();
+      return;
+    }
+    if (code != null) {
+      // as the website: the Desk sees which code the visitor came from
+      _mirror.note(visitor: false, text: app.lang == 'en' ? 'The visitor came from the GCC tariff page, code $code.' : 'جاء الزائر من صفحة التعرفة الخليجية — البند $code.', meta: const {'source': 'flow'});
+    }
+    _mirror.note(visitor: true, text: q);
     setState(() {
       _lines.add(_Line(true, q));
       _busy = true;
@@ -93,9 +154,11 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     _toEnd();
     // A question about Syria gets MIDTRANS's Syrian tariff app and page; this app covers
     // the unified GCC tariff only (owner 2026-11-07).
-    if (code == null && _syria.hasMatch(q)) {
+    if (code == null && _syria.hasMatch(q) && _tariffWords.hasMatch(q)) {
+      final a = app.s.syriaAnswer(AppConfig.syriaAppPage, app.lang == 'ar' ? AppConfig.syriaTariffAr : AppConfig.syriaTariffEn);
+      _mirror.note(visitor: false, text: a, meta: const {'source': 'flow'});
       setState(() {
-        _lines.add(_Line(false, app.s.syriaAnswer(AppConfig.syriaAppPage, app.lang == 'ar' ? AppConfig.syriaTariffAr : AppConfig.syriaTariffEn)));
+        _lines.add(_Line(false, a));
         _busy = false;
       });
       _toEnd();
@@ -106,6 +169,11 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
       _history
         ..add(MiraTurn('user', q))
         ..add(MiraTurn('assistant', reply.answer));
+      _mirror.note(visitor: false, text: reply.answer, meta: {
+        'source': 'brain',
+        'handoff_suggested': reply.handoffSuggested,
+        if (reply.tag != null) 'tag': reply.tag,
+      });
       if (!mounted) return;
       setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested)));
     } catch (_) {
@@ -128,17 +196,93 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     _send(q, code: _lastCode);
   }
 
-  void _newChat() => setState(() {
-        _lines.clear();
-        _history.clear();
-        _lastQuestion = null;
-      });
+  Future<void> _newChat() async {
+    setState(() {
+      _lines.clear();
+      _history.clear();
+      _lastQuestion = null;
+    });
+    // a new chat is a new conversation in the Desk too
+    await _mirror.reset();
+    await _client.newSession();
+  }
+
+  /// «Talk to the MIDTRANS team»: with the visitor's details already known, the request
+  /// goes at once (as on the website); otherwise MIRA asks for them first.
+  void _askTeam() {
+    if (_filing) return;
+    if (_lead?.complete == true) {
+      _fileRequest();
+      return;
+    }
+    setState(() => _heldTeam = true); // the details card is already on screen
+  }
+
+  /// What waited for the details: the code or question the screen opened with, then the
+  /// request for an expert.
+  void _releaseHeld() {
+    if (_needsDetails || !_leadLoaded) return;
+    final text = _heldText, code = _heldCode, team = _heldTeam;
+    _heldText = null;
+    _heldCode = null;
+    _heldTeam = false;
+    if (text != null) {
+      _send(text, code: code);
+    } else if (team) {
+      _fileRequest();
+    }
+  }
+
+  Future<void> _contactGiven(MiraLead lead) async {
+    final app = AppScope.of(context);
+    final known = lead.withVisitorId(_lead?.visitorId.isNotEmpty == true ? _lead!.visitorId : MiraClient.newRequestKey());
+    _mirror.lang = app.lang;
+    _mirror.note(visitor: false, text: app.s.contactIntro, meta: const {'source': 'flow'});
+    _mirror.note(visitor: true, text: known.summary);
+    setState(() => _lead = _mirror.lead = known);
+    await _client.saveLead(known);
+    unawaited(_client.upsertVisitor(known, lang: app.lang));
+    _releaseHeld();
+  }
+
+  /// The request: MIRA's server issues its number, the Desk gets the conversation
+  /// marked as a request, and the visitor reads one closing message.
+  Future<void> _fileRequest() async {
+    final lead = _lead;
+    if (lead == null || _filing) return;
+    final app = AppScope.of(context);
+    setState(() => _filing = true);
+    final key = MiraClient.newRequestKey();
+    final h = await _client.handoff(lead, lang: app.lang, requestKey: key);
+    final number = (h?.isTest ?? false) ? null : h?.number;
+    final text = app.s.requestSent(number: h?.number, online: h?.anyOnline ?? false, replyBy: h?.replyBy, emailed: number != null && lead.email.isNotEmpty);
+    _mirror.note(visitor: false, text: text, meta: {
+      'source': 'flow',
+      'staff_requested': !(h?.isTest ?? false),
+      if (h?.number != null) 'request_number': h!.number,
+      'request_key': key,
+    });
+    unawaited(_mirror.flush());
+    if (!mounted) return;
+    setState(() {
+      _filing = false;
+      _lines.add(_Line(false, text, filed: true));
+    });
+    _toEnd();
+  }
 
   void _toEnd() => WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_scroll.hasClients) {
           _scroll.animateTo(_scroll.position.maxScrollExtent + 80, duration: const Duration(milliseconds: 250), curve: Curves.easeOut);
         }
       });
+
+  /// A signed-in visitor's account fills the card; the visitor still confirms it.
+  MiraLead? _fromAccount() {
+    final p = AppScope.of(context).account.profile;
+    if (p.name.isEmpty && p.phone.isEmpty && p.email.isEmpty) return null;
+    return MiraLead(name: p.name, phone: p.phone, email: p.email);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -155,10 +299,12 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
             child: const Icon(Icons.auto_awesome, color: AppColors.gold, size: 18),
           ),
           const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(s.tabMira, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            Text(s.miraSubtitle, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
-          ]),
+          Flexible(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(s.tabMira, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+              Text(s.miraSubtitle, style: const TextStyle(fontSize: 11, color: AppColors.muted), overflow: TextOverflow.ellipsis),
+            ]),
+          ),
         ]),
         actions: [
           if (_lines.isNotEmpty)
@@ -173,11 +319,17 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             children: [
               _Bubble(line: _Line(false, s.miraHello)),
-              if (_lines.isEmpty)
+              if (!_leadLoaded)
+                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.gold)))
+              else if (_needsDetails) ...[
+                _Bubble(line: _Line(false, s.contactIntro)),
+                ContactCard(initial: _lead ?? _fromAccount(), busy: false, onDone: _contactGiven),
+              ] else if (_lines.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Wrap(spacing: 8, runSpacing: 8, children: [
                     for (final q in s.miraSuggestions) Pressable(child: ActionChip(label: Text(q), onPressed: () => _send(q))),
+                    Pressable(child: ActionChip(avatar: const Icon(Icons.support_agent, size: 18, color: AppColors.gold), label: Text(s.miraTeam), onPressed: _askTeam)),
                   ]),
                 ),
               for (final l in _lines) ...[
@@ -189,27 +341,40 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
                       for (final c in s.miraCountries) Pressable(child: ActionChip(label: Text(c), onPressed: () => _send(c))),
                     ]),
                   ),
-                if (l.handoff)
+                if (l.handoff && !_filing)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Pressable(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.support_agent, color: AppColors.gold, size: 18),
+                        label: Text(s.miraTeam, style: const TextStyle(color: AppColors.goldText)),
+                        onPressed: _askTeam,
+                      ),
+                    ),
+                  ),
+                if (l.filed)
                   Align(
                     alignment: AlignmentDirectional.centerStart,
                     child: Pressable(
                       child: TextButton.icon(
                         icon: const Icon(Icons.chat, color: AppColors.gold, size: 18),
-                        label: Text(s.miraTeam, style: const TextStyle(color: AppColors.goldText)),
+                        label: Text(s.miraWhatsApp, style: const TextStyle(color: AppColors.goldText)),
                         onPressed: () => launchUrl(Uri.parse(AppConfig.whatsappUrl), mode: LaunchMode.externalApplication),
                       ),
                     ),
                   ),
               ],
               if (_busy) _Thinking(label: s.miraThinking),
+              if (_filing) _Thinking(label: s.sending),
             ],
           ),
         ),
         _Composer(
           controller: _input,
-          hint: s.miraHint,
+          hint: _needsDetails ? s.contactFirst : s.miraHint,
           note: s.miraNote,
           busy: _busy,
+          locked: !_leadLoaded || _needsDetails,
           onSend: () => _send(_input.text),
           // As a tab, the navigation bar below already sits on the bottom inset.
           bottomInset: widget.standalone,
@@ -331,11 +496,14 @@ class _Thinking extends StatelessWidget {
 
 /// The writing box sits right on top of the navigation bar: no footer, no extra margin.
 class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.hint, required this.note, required this.busy, required this.onSend, required this.bottomInset});
+  const _Composer({required this.controller, required this.hint, required this.note, required this.busy, this.locked = false, required this.onSend, required this.bottomInset});
   final TextEditingController controller;
   final String hint;
   final String note;
   final bool busy;
+
+  /// Closed until the visitor's details are in.
+  final bool locked;
   final VoidCallback onSend;
   final bool bottomInset;
 
@@ -354,6 +522,7 @@ class _Composer extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
+                  enabled: !locked,
                   minLines: 1,
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
@@ -373,7 +542,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 8),
               Pressable(
                 child: IconButton.filled(
-                  onPressed: busy ? null : onSend,
+                  onPressed: busy || locked ? null : onSend,
                   style: IconButton.styleFrom(backgroundColor: AppColors.gold, foregroundColor: AppColors.ground, disabledBackgroundColor: AppColors.line),
                   icon: const Icon(Icons.send),
                 ),
@@ -387,3 +556,4 @@ class _Composer extends StatelessWidget {
     );
   }
 }
+

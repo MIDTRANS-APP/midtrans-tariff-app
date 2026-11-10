@@ -31,11 +31,18 @@ class _SearchScreenState extends State<SearchScreen> {
     super.initState();
     final q = Shot.arg('search');
     if (q.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) => _setQuery(q));
+    if (Shot.demo) Shot.query.addListener(_demoQuery);
+  }
+
+  void _demoQuery() {
+    final v = Shot.query.value;
+    if (v != null && mounted) _setQuery(v);
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    Shot.query.removeListener(_demoQuery);
     _controller.dispose();
     super.dispose();
   }
