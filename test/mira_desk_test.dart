@@ -30,7 +30,7 @@ void main() {
     expect(h.replyBy, 'hour');
   });
 
-  test('mirror waits for the visitor, then sends the turns with the app as the page', () async {
+  test('mirror sends nothing before the visitor registers, then the whole conversation', () async {
     final bodies = <Map<String, dynamic>>[];
     final mock = MockClient((req) async {
       bodies.add(jsonDecode(req.body) as Map<String, dynamic>);
@@ -38,21 +38,37 @@ void main() {
     });
     final client = MiraClient(client: mock);
     final mirror = MiraMirror(client, http: mock);
-    mirror.note(visitor: false, text: 'MIRA line before the visitor wrote', meta: const {'source': 'flow'});
-    await mirror.flush();
-    expect(bodies, isEmpty, reason: 'nothing goes before the visitor writes');
     mirror.note(visitor: true, text: 'كم رسم القهوة؟');
-    mirror.note(visitor: false, text: 'الجواب', meta: const {'source': 'brain', 'handoff_suggested': false});
+    mirror.note(visitor: false, text: 'الجواب', meta: const {'source': 'brain', 'handoff_suggested': true});
+    await mirror.flush();
+    expect(bodies, isEmpty, reason: 'a guest\'s conversation does not reach the Desk');
+    mirror.lead = const MiraLead(name: 'A', phone: '+971500000000', country: 'AE', whatsapp: '+971500000000', email: 'a@b.co');
+    mirror.note(visitor: true, text: 'A');
     await mirror.flush();
     expect(bodies, hasLength(1));
     final b = bodies.single;
     expect(b['channel'], 'chat');
     expect((b['page_url'] as String).startsWith('https://www.mid-trans.com/gcc-tariff-app/?app='), isTrue);
+    expect(b['visitor'], {'name': 'A', 'email': 'a@b.co', 'phone': '+971500000000'});
     final turns = (b['turns'] as List).cast<Map<String, dynamic>>();
-    expect(turns.map((t) => t['role']), ['mira', 'visitor', 'mira']);
-    expect(turns.last['meta'], {'source': 'brain', 'handoff_suggested': false});
+    expect(turns.map((t) => t['role']), ['visitor', 'mira', 'visitor']);
     await mirror.flush();
     expect(bodies, hasLength(1), reason: 'sent turns are not sent again');
+  });
+
+  test('ask tells MIRA whether the visitor is registered', () async {
+    late Map<String, dynamic> body;
+    final client = MiraClient(client: MockClient((req) async {
+      body = jsonDecode(req.body) as Map<String, dynamic>;
+      return http.Response(jsonEncode({'ok': true, 'data': {'answer': 'x', 'rfq_pending': true}}), 200);
+    }));
+    final guest = await client.ask('quote please', lang: 'ar');
+    expect(body['registered'], false);
+    expect(body.containsKey('visitor'), isFalse);
+    expect(guest.rfqPending, isTrue);
+    await client.ask('quote please', lang: 'ar', visitor: const MiraLead(name: 'A', phone: '+971500000000', whatsapp: '+971500000000', email: 'a@b.co'));
+    expect(body['registered'], true);
+    expect(body['visitor'], {'name': 'A', 'email': 'a@b.co', 'phone': '+971500000000'});
   });
 
   test('a failed batch stays queued and goes again', () async {
@@ -62,7 +78,8 @@ void main() {
       calls++;
       return fail ? http.Response('busy', 429) : http.Response('{"ok":true}', 200);
     });
-    final mirror = MiraMirror(MiraClient(client: mock), http: mock);
+    final mirror = MiraMirror(MiraClient(client: mock), http: mock)
+      ..lead = const MiraLead(name: 'A', phone: '+971500000000', whatsapp: '+971500000000', email: 'a@b.co');
     mirror.note(visitor: true, text: 'hello');
     await mirror.flush();
     fail = false;

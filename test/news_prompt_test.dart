@@ -52,7 +52,7 @@ void main() {
     await t.tap(find.text('رقم الواتساب هو نفسه رقم الهاتف'));
     await t.enterText(find.widgetWithText(TextField, 'البريد الإلكتروني'), 'k@example.com');
     await t.pump();
-    t.widget<FilledButton>(find.ancestor(of: find.text('متابعة'), matching: find.byType(FilledButton))).onPressed!();
+    t.widget<FilledButton>(find.ancestor(of: find.text('سجّل بياناتي'), matching: find.byType(FilledButton))).onPressed!();
     await t.pump();
     await t.pump(const Duration(seconds: 2));
     final saved = jsonDecode((await SharedPreferences.getInstance()).getString('mira_lead')!) as Map<String, dynamic>;

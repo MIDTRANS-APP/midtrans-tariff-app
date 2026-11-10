@@ -9,7 +9,10 @@ import 'theme.dart';
 /// The visitor's details before the chat, every field required (owner 2026-11-10): name,
 /// phone and WhatsApp (each with its country, the UAE first, changeable), and email.
 class ContactCard extends StatefulWidget {
-  const ContactCard({super.key, required this.initial, required this.busy, required this.onDone, this.extra});
+  const ContactCard({super.key, required this.initial, required this.busy, required this.onDone, this.extra, this.submitLabel});
+
+  /// The button's words (the news popup's own; «متابعة» otherwise).
+  final String? submitLabel;
   final MiraLead? initial;
 
   /// Shown above the button (the news popup puts its choices here).
@@ -185,7 +188,7 @@ class _ContactCardState extends State<ContactCard> {
         if (_error != null)
           Padding(padding: const EdgeInsets.only(top: 8), child: Text(_error!, style: const TextStyle(color: AppColors.warn, fontSize: 12.5))),
         const SizedBox(height: 10),
-        Pressable(child: FilledButton(onPressed: widget.busy ? null : _submit, child: Text(s.contactSend))),
+        Pressable(child: FilledButton(onPressed: widget.busy ? null : _submit, child: Text(widget.submitLabel ?? s.contactSend))),
         const SizedBox(height: 6),
         Text(s.contactSaved, style: const TextStyle(fontSize: 11, color: AppColors.muted)),
       ]),

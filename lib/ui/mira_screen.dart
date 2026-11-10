@@ -59,15 +59,33 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   final _client = MiraClient();
   late final _mirror = MiraMirror(_client);
   MiraLead? _lead;
+
+  /// A signed-in visitor (Apple, Google or an email account) is never asked: their
+  /// account already holds name, email and phone (owner 2026-11-10). Only a guest is.
+  MiraLead? get _accountLead {
+    final account = AppScope.of(context).account;
+    final p = account.profile;
+    if (!account.signedIn || !account.profileComplete) return null;
+    return MiraLead(
+      name: p.name,
+      phone: p.phone,
+      whatsapp: p.phone,
+      email: p.email,
+      visitorId: 'acct-${account.user!.uid}',
+    );
+  }
+
+  bool _accountRecorded = false;
+
+  /// Who is talking: the account first, else the details given in the chat.
+  MiraLead? get _who => _accountLead ?? _lead;
   bool _filing = false;
 
-  /// Every field is asked before the chat (owner 2026-11-10): what the visitor asked
-  /// meanwhile waits here and goes once the details are in.
-  bool _leadLoaded = false;
-  String? _heldText;
-  String? _heldCode;
-  bool _heldTeam = false;
-  bool get _needsDetails => _leadLoaded && _lead?.complete != true;
+
+  /// MIRA answers anyone without asking anything; the details are asked only when a
+  /// request is to go to the team, and nothing reaches the team before (owner 2026-11-10:
+  /// «لا يسأل العميل و لا يصل إلى موظفين الشركة طلب عروض اسعار من دون تسجيل»).
+  bool get _registered => _who?.complete == true;
   final _input = TextEditingController();
   final _scroll = ScrollController();
   final _lines = <_Line>[];
@@ -90,12 +108,7 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   void initState() {
     super.initState();
     _client.savedLead().then((l) {
-      if (!mounted) return;
-      setState(() {
-        _leadLoaded = true;
-        if (l != null) _lead = _mirror.lead = l;
-      });
-      _releaseHeld();
+      if (l != null && mounted) setState(() => _lead = _mirror.lead = l);
     });
     if (widget.code != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -122,14 +135,13 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     if (q.isEmpty || _busy) return;
     final app = AppScope.of(context);
     _mirror.lang = app.lang;
-    if (!_leadLoaded || _needsDetails) {
-      // the details first; the question goes right after them
-      setState(() {
-        _heldText = q;
-        _heldCode = code;
-      });
-      _input.clear();
-      return;
+    final account = _accountLead;
+    if (account != null) {
+      _mirror.lead = account;
+      if (!_accountRecorded) {
+        _accountRecorded = true;
+        unawaited(_client.upsertVisitor(account, lang: app.lang));
+      }
     }
     // «Talk to the team» typed: the request, as the button does.
     if (code == null && q.length <= 40 && _teamAsk.hasMatch(q)) {
@@ -165,7 +177,7 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
       return;
     }
     try {
-      final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code);
+      final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code, visitor: _registered ? _who : null);
       _history
         ..add(MiraTurn('user', q))
         ..add(MiraTurn('assistant', reply.answer));
@@ -176,6 +188,8 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
       });
       if (!mounted) return;
       setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested)));
+      // a quote MIRA would have sent to the team: the visitor registers first, then it goes
+      if (reply.rfqPending && !_registered) _askTeam();
     } catch (_) {
       if (!mounted) return;
       setState(() => _lines.add(_Line(false, app.s.miraOffline, failed: true)));
@@ -207,30 +221,18 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     await _client.newSession();
   }
 
-  /// «Talk to the MIDTRANS team»: with the visitor's details already known, the request
-  /// goes at once (as on the website); otherwise MIRA asks for them first.
+  /// «التحدث مع خبير جمركي»: a registered visitor's request goes at once; a guest
+  /// gives their details first, in the chat.
   void _askTeam() {
     if (_filing) return;
-    if (_lead?.complete == true) {
+    if (_registered) {
       _fileRequest();
       return;
     }
-    setState(() => _heldTeam = true); // the details card is already on screen
-  }
-
-  /// What waited for the details: the code or question the screen opened with, then the
-  /// request for an expert.
-  void _releaseHeld() {
-    if (_needsDetails || !_leadLoaded) return;
-    final text = _heldText, code = _heldCode, team = _heldTeam;
-    _heldText = null;
-    _heldCode = null;
-    _heldTeam = false;
-    if (text != null) {
-      _send(text, code: code);
-    } else if (team) {
-      _fileRequest();
-    }
+    if (_lines.isNotEmpty && _lines.last.contact) return;
+    final s = AppScope.of(context).s;
+    setState(() => _lines.add(_Line(false, s.contactIntro, contact: true)));
+    _toEnd();
   }
 
   Future<void> _contactGiven(MiraLead lead) async {
@@ -239,16 +241,19 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     _mirror.lang = app.lang;
     _mirror.note(visitor: false, text: app.s.contactIntro, meta: const {'source': 'flow'});
     _mirror.note(visitor: true, text: known.summary);
-    setState(() => _lead = _mirror.lead = known);
+    setState(() {
+      _lead = _mirror.lead = known;
+      _lines.add(_Line(true, known.summary));
+    });
     await _client.saveLead(known);
     unawaited(_client.upsertVisitor(known, lang: app.lang));
-    _releaseHeld();
+    await _fileRequest();
   }
 
   /// The request: MIRA's server issues its number, the Desk gets the conversation
   /// marked as a request, and the visitor reads one closing message.
   Future<void> _fileRequest() async {
-    final lead = _lead;
+    final lead = _who;
     if (lead == null || _filing) return;
     final app = AppScope.of(context);
     setState(() => _filing = true);
@@ -319,12 +324,7 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             children: [
               _Bubble(line: _Line(false, s.miraHello)),
-              if (!_leadLoaded)
-                const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.gold)))
-              else if (_needsDetails) ...[
-                _Bubble(line: _Line(false, s.contactIntro)),
-                ContactCard(initial: _lead ?? _fromAccount(), busy: false, onDone: _contactGiven),
-              ] else if (_lines.isEmpty)
+              if (_lines.isEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Wrap(spacing: 8, runSpacing: 8, children: [
@@ -352,6 +352,8 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
                       ),
                     ),
                   ),
+                if (l.contact && identical(l, _lines.last))
+                  ContactCard(initial: _lead ?? _fromAccount(), busy: _filing, onDone: _contactGiven),
                 if (l.filed)
                   Align(
                     alignment: AlignmentDirectional.centerStart,
@@ -371,10 +373,9 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
         ),
         _Composer(
           controller: _input,
-          hint: _needsDetails ? s.contactFirst : s.miraHint,
+          hint: s.miraHint,
           note: s.miraNote,
           busy: _busy,
-          locked: !_leadLoaded || _needsDetails,
           onSend: () => _send(_input.text),
           // As a tab, the navigation bar below already sits on the bottom inset.
           bottomInset: widget.standalone,
@@ -496,14 +497,11 @@ class _Thinking extends StatelessWidget {
 
 /// The writing box sits right on top of the navigation bar: no footer, no extra margin.
 class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.hint, required this.note, required this.busy, this.locked = false, required this.onSend, required this.bottomInset});
+  const _Composer({required this.controller, required this.hint, required this.note, required this.busy, required this.onSend, required this.bottomInset});
   final TextEditingController controller;
   final String hint;
   final String note;
   final bool busy;
-
-  /// Closed until the visitor's details are in.
-  final bool locked;
   final VoidCallback onSend;
   final bool bottomInset;
 
@@ -522,7 +520,6 @@ class _Composer extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
-                  enabled: !locked,
                   minLines: 1,
                   maxLines: 4,
                   textInputAction: TextInputAction.send,
@@ -542,7 +539,7 @@ class _Composer extends StatelessWidget {
               const SizedBox(width: 8),
               Pressable(
                 child: IconButton.filled(
-                  onPressed: busy || locked ? null : onSend,
+                  onPressed: busy ? null : onSend,
                   style: IconButton.styleFrom(backgroundColor: AppColors.gold, foregroundColor: AppColors.ground, disabledBackgroundColor: AppColors.line),
                   icon: const Icon(Icons.send),
                 ),

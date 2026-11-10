@@ -64,8 +64,8 @@ class S {
 
   // The contact step and the request, in the words of MIRA's web chat (chat.midtrans.org):
   // one MIRA, one set of visitor details for every app (owner 2026-11-10).
-  String get contactIntro => _t('البحث في البنود الجمركية متاح لك دون أي بيانات. أما للتحدث معي ومع خبير جمركي من ميدترانس، فأحتاج بعض بياناتك ليتابع معك الخبير عند الحاجة:',
-      'Searching the customs codes needs no details. To talk with me and a MIDTRANS customs expert, I need a few details so the expert can follow up with you:');
+  String get contactIntro => _t('قبل أن أرسل طلبك إلى خبير جمركي من ميدترانس، أحتاج بعض بياناتك:',
+      'Before I send your request to a MIDTRANS customs expert, I need a few details:');
 
   // The news popup (owner 2026-11-10): the same details MIRA asks, for periodic customs news.
   String get newsTitle => _t('أخبار جمركية خليجية', 'GCC customs news');
@@ -74,7 +74,6 @@ class S {
   String get newsRegister => _t('سجّل بياناتي', 'Register my details');
   String get newsLater => _t('لاحقاً', 'Later');
   String get newsDone => _t('تم التسجيل. ستصلك أخبار التعرفة الجمركية الخليجية عبر واتساب أو البريد الإلكتروني.', 'Registered. The GCC customs tariff news will reach you by WhatsApp or email.');
-  String get contactFirst => _t('أكمل بياناتك أولاً للتحدث مع ميرا', 'Complete your details first to talk to MIRA');
   String get contactName => _t('الاسم', 'Name');
   String get contactCountry => _t('البلد', 'Country');
   String get contactPhone => _t('رقم الهاتف', 'Phone number');

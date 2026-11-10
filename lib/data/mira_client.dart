@@ -18,9 +18,13 @@ class MiraTurn {
 }
 
 class MiraReply {
-  const MiraReply(this.answer, {this.handoffSuggested = false, this.tag});
+  const MiraReply(this.answer, {this.handoffSuggested = false, this.tag, this.rfqPending = false});
   final String answer;
   final bool handoffSuggested;
+
+  /// MIRA has a quote ready that she did not send, because the visitor is not
+  /// registered yet (MIRA's server, owner 2026-11-10).
+  final bool rfqPending;
 
   /// 'personal_request' or 'priority' when MIRA's brain marks the question so.
   final String? tag;
@@ -212,7 +216,9 @@ class MiraClient {
 
   /// [tariffCode] (12 digits, no dots) makes MIRA answer from the GCC tariff for that code.
   /// Throws on network or server failure; one retry, as the web chat does.
-  Future<MiraReply> ask(String message, {required String lang, List<MiraTurn> history = const [], String? tariffCode}) async {
+  /// [visitor]: the registered visitor (account or details given), or null for a guest,
+  /// whose quote MIRA's server then holds back instead of sending it to the team.
+  Future<MiraReply> ask(String message, {required String lang, List<MiraTurn> history = const [], String? tariffCode, MiraLead? visitor}) async {
     final recent = history.length > 4 ? history.sublist(history.length - 4) : history;
     final body = jsonEncode({
       'message': message,
@@ -220,6 +226,8 @@ class MiraClient {
       'history': [for (final t in [..._context(lang), ...recent]) t.toJson()],
       if (tariffCode != null) 'tariff_card': {'code': tariffCode, 'scope': 'gcc', 'on_page': true},
       'session_id': await _session(),
+      'registered': visitor != null,
+      if (visitor != null) 'visitor': visitor.visitor,
     });
     Object? lastError;
     for (var attempt = 0; attempt < 2; attempt++) {
@@ -235,7 +243,7 @@ class MiraClient {
         final answer = data?['answer'] as String?;
         if (answer == null || answer.trim().isEmpty) throw Exception(json['error'] ?? 'no_answer');
         final tag = data?['personal_request'] != null ? 'personal_request' : (data?['priority'] != null ? 'priority' : null);
-        return MiraReply(answer.trim(), handoffSuggested: data?['handoff_suggested'] == true, tag: tag);
+        return MiraReply(answer.trim(), handoffSuggested: data?['handoff_suggested'] == true, tag: tag, rfqPending: data?['rfq_pending'] == true);
       } catch (e) {
         lastError = e;
       }
@@ -253,7 +261,9 @@ class MiraMirror {
   final MiraClient _client;
   final http.Client _http;
   final _queue = <Map<String, Object?>>[];
-  bool _released = false;
+  /// Nothing reaches the Desk before the visitor is registered (owner 2026-11-10); then
+  /// the whole conversation goes, the earlier lines first.
+  bool get _released => lead != null && lead!.complete;
   bool _sending = false;
   Timer? _timer;
   MiraLead? lead;
@@ -271,7 +281,6 @@ class MiraMirror {
       'meta': visitor ? const <String, Object?>{} : meta,
     });
     if (_queue.length > 200) _queue.removeRange(0, _queue.length - 200);
-    if (visitor || meta['staff_requested'] == true || meta['handoff_suggested'] == true) _released = true;
     _schedule();
   }
 
@@ -279,7 +288,6 @@ class MiraMirror {
   Future<void> reset() async {
     await flush();
     _queue.clear();
-    _released = false;
   }
 
   void _schedule() {

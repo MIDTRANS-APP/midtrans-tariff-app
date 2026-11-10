@@ -28,6 +28,8 @@ class NewsPrompt {
 
   static Future<void> itemOpened(BuildContext context) async {
     if (Shot.on || _showing) return;
+    // a signed-in visitor gives nothing more: their account already has the details
+    if (AppScope.of(context).account.signedIn) return;
     final p = await SharedPreferences.getInstance();
     final n = (p.getInt(_countKey) ?? 0) + 1;
     await p.setInt(_countKey, n);
@@ -136,7 +138,7 @@ class _NewsSheetState extends State<_NewsSheet> {
               FilledButton(onPressed: () => setState(() => _form = true), child: Text(s.newsRegister)),
               TextButton(onPressed: () => Navigator.of(context).pop(), child: Text(s.newsLater)),
             ] else
-              ContactCard(initial: _initial(app), busy: _busy, onDone: _done),
+              ContactCard(initial: _initial(app), busy: _busy, onDone: _done, submitLabel: s.newsRegister),
           ]),
         ),
       ),
