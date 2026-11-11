@@ -27,6 +27,11 @@ class AppConfig {
   /// app's download link for the Gulf tariff.
   static const miraAppId = 'tariff_sy';
 
+  /// Where the Desk sees this app's conversations come from: MIRA keeps one brain,
+  /// one store and one set of visitor details for every app (owner 2026-11-10:
+  /// «العقل و التخزين و تجميع المعلومات واحدة»); only the screen is the app's own.
+  static const miraSourcePage = 'https://www.mid-trans.com/tariff-app/';
+
   /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
   static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
 

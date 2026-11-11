@@ -19,7 +19,7 @@
 - احفظ البنود التي تستخدمها، وشاركها برسالة.
 - اسأل ميرا، مساعدة ميدترانس، عن البند أو عن الشحن.
 
-تطبيق غير رسمي من ميدترانس (المتوسط للشحن والخدمات)، وليس تابعاً لأي جهة حكومية. الأرقام للاسترشاد فقط، والتصنيف والرسوم النهائية تؤكدها الجمارك.
+تطبيق غير رسمي من ميدترانس (المتوسط للشحن والخدمات)، وليس تابعاً لأي جهة حكومية. الأرقام للاسترشاد فقط، والتصنيف والرسوم النهائية تؤكدها الجمارك. ميدترانس تعمل بإشراف مخلص جمركي معتمد في دبي.
 
 ## English
 
@@ -38,7 +38,7 @@ Search the Syrian customs tariff by HS code or goods name, in Arabic or English.
 - Save the codes you use and share them.
 - Ask MIRA, the MIDTRANS assistant, about a code or about shipping.
 
-An unofficial app by MIDTRANS Shipping & Services, not affiliated with any government body. Figures are for guidance only; final classification and fees are confirmed by customs.
+An unofficial app by MIDTRANS Shipping & Services, not affiliated with any government body. Figures are for guidance only; final classification and fees are confirmed by customs. MIDTRANS works under a licensed customs broker in Dubai.
 
 ## ملاحظات قبل النشر
 

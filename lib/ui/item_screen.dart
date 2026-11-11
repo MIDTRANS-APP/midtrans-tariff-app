@@ -5,6 +5,7 @@ import '../ads/ad_slot.dart';
 import '../app_state.dart';
 import '../data/fee_text.dart';
 import 'mira_screen.dart';
+import 'news_prompt.dart';
 import 'share_card.dart';
 import 'motion.dart';
 import 'theme.dart';
@@ -30,7 +31,8 @@ class ItemScreen extends StatelessWidget {
     void openMira() => Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => MiraScreen(standalone: true, code: row.code, displayCode: row.displayCode)));
 
-    return Scaffold(
+    // from the third code page: the suggestion to register for periodic customs news
+    return NewsPromptHook(child: Scaffold(
       appBar: AppBar(
         title: Text(s.itemTitle),
         actions: [
@@ -127,6 +129,6 @@ class ItemScreen extends StatelessWidget {
         const SizedBox(height: 16),
         const AdSlot(AdPlacement.itemBanner),
       ]),
-    );
+    ));
   }
 }
