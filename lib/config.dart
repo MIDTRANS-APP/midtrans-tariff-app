@@ -22,6 +22,11 @@ class AppConfig {
   static const miraApi = 'https://api.midtrans.org/api/v1/chat/ask';
   static const miraOrigin = 'https://chat.midtrans.org';
 
+  /// Which app MIRA is talking in (owner 2026-11-11: one MIRA for every app). MIRA's
+  /// server keeps this app to the Syrian tariff and shipping quotes, and gives the GCC
+  /// app's download link for the Gulf tariff.
+  static const miraAppId = 'tariff_sy';
+
   /// MIDTRANS's public sea-freight prices, the same list MIRA quotes from (owner 2026-10-28).
   static const ratesApi = 'https://api.midtrans.org/api/v1/public/rates';
 

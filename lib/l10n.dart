@@ -55,6 +55,7 @@ class S {
   String get miraHint => _t('اكتب سؤالك…', 'Type your question…');
   String get miraThinking => _t('ميرا تكتب…', 'MIRA is typing…');
   String get miraNew => _t('محادثة جديدة', 'New chat');
+  String get miraSignIn => _t('سجّل الدخول لإرسال طلبك إلى الفريق', 'Sign in to send your request to the team');
   String get miraTeam => _t('تحدّث مع فريق ميدترانس على واتساب', 'Talk to the MIDTRANS team on WhatsApp');
   String get miraNote => _t('إجابات ميرا للاسترشاد، والرسوم النهائية تؤكدها الجمارك.', 'MIRA\'s answers are guidance; final fees are confirmed by customs.');
   List<String> get miraSuggestions => en

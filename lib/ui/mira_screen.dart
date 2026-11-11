@@ -6,6 +6,7 @@ import '../app_state.dart';
 import '../config.dart';
 import '../data/mira_client.dart';
 import 'motion.dart';
+import 'account_screen.dart';
 import 'theme.dart';
 
 /// MIRA drawn by the app in its own design, talking to MIRA's brain directly
@@ -28,12 +29,15 @@ class MiraScreen extends StatefulWidget {
 }
 
 class _Line {
-  _Line(this.mine, this.text, {this.handoff = false, this.failed = false})
+  _Line(this.mine, this.text, {this.handoff = false, this.failed = false, this.signIn = false})
       : asksCountry = !mine && !failed && _countryQuestion.hasMatch(text);
   final bool mine;
   final String text;
   final bool handoff;
   final bool failed;
+
+  /// A quote request waits for the visitor to sign in (owner 2026-11-10).
+  final bool signIn;
 
   /// MIRA asks which destination country: the app offers Syria or the Gulf tariff as
   /// buttons instead (owner 2026-10-28).
@@ -51,9 +55,6 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   final _lines = <_Line>[];
   final _history = <MiraTurn>[];
   bool _busy = false;
-  static final _gulf = RegExp(
-      r'(خليج|الخليجية|السعودي|السعودية|الإمارات|الامارات|الكويت|قطر|البحرين|عمان|عُمان|دبي|GCC|Gulf|Saudi|UAE|Emirates|Kuwait|Qatar|Bahrain|Oman|Dubai)',
-      caseSensitive: false);
   String? _lastQuestion;
   String? _lastCode;
 
@@ -92,23 +93,20 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     });
     _input.clear();
     _toEnd();
-    // An explicit question about the Gulf tariff gets its page on mid-trans.com; the app
-    // itself covers the Syrian tariff only (owner 2026-10-28).
-    if (code == null && _gulf.hasMatch(q)) {
-      setState(() {
-        _lines.add(_Line(false, app.s.gulfAnswer(app.lang == 'ar' ? AppConfig.gccTariffAr : AppConfig.gccTariffEn)));
-        _busy = false;
-      });
-      _toEnd();
-      return;
-    }
     try {
-      final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code);
+      final acc = app.account;
+      final visitor = acc.signedIn
+          ? MiraVisitor(
+              name: acc.profile.name.isNotEmpty ? acc.profile.name : (acc.user?.displayName ?? ''),
+              email: acc.profile.email.isNotEmpty ? acc.profile.email : (acc.user?.email ?? ''),
+              phone: acc.profile.phone)
+          : null;
+      final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code, visitor: visitor);
       _history
         ..add(MiraTurn('user', q))
         ..add(MiraTurn('assistant', reply.answer));
       if (!mounted) return;
-      setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested)));
+      setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested, signIn: reply.rfqPending)));
     } catch (_) {
       if (!mounted) return;
       setState(() => _lines.add(_Line(false, app.s.miraOffline, failed: true)));
@@ -144,7 +142,8 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final s = AppScope.of(context).s;
+    final app = AppScope.of(context);
+    final s = app.s;
     return Scaffold(
       appBar: AppBar(
         titleSpacing: widget.standalone ? 0 : null,
@@ -189,6 +188,17 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
                     child: Wrap(spacing: 8, runSpacing: 8, children: [
                       for (final c in s.miraCountries) Pressable(child: ActionChip(label: Text(c), onPressed: () => _send(c))),
                     ]),
+                  ),
+                if (l.signIn && !app.account.signedIn)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Pressable(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.person, color: AppColors.gold, size: 18),
+                        label: Text(s.miraSignIn, style: const TextStyle(color: AppColors.goldText)),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen())),
+                      ),
+                    ),
                   ),
                 if (l.handoff)
                   Align(

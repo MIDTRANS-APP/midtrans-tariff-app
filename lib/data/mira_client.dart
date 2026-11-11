@@ -16,9 +16,23 @@ class MiraTurn {
 }
 
 class MiraReply {
-  const MiraReply(this.answer, {this.handoffSuggested = false});
+  const MiraReply(this.answer, {this.handoffSuggested = false, this.rfqPending = false});
   final String answer;
   final bool handoffSuggested;
+
+  /// A quote request is ready but the visitor is not signed in: nothing reaches the team
+  /// until they sign in (owner 2026-11-10).
+  final bool rfqPending;
+}
+
+/// The signed-in person MIRA greets by name and never asks to register (owner 2026-11-11).
+class MiraVisitor {
+  const MiraVisitor({this.name = '', this.email = '', this.phone = ''});
+  final String name;
+  final String email;
+  final String phone;
+
+  Map<String, String> toJson() => {'name': name, 'email': email, 'phone': phone};
 }
 
 /// MIRA's brain, called directly so the chat is drawn by the app in its own design
@@ -43,28 +57,19 @@ class MiraClient {
     return _sessionId = id;
   }
 
-  /// The app is for the Syrian tariff only (owner 2026-10-28): every conversation opens
-  /// with this exchange, so MIRA answers about Syria and does not ask for the destination.
-  /// It goes in the history, not in the message, so MIRA's code search reads only the question.
-  static List<MiraTurn> _context(String lang) => lang == 'en'
-      ? const [
-          MiraTurn('user', 'I am using the MIDTRANS Syrian Customs Tariff app. My questions are about importing into Syria and the Syrian customs tariff only.'),
-          MiraTurn('assistant', 'Understood, I will answer about the Syrian customs tariff and importing into Syria.'),
-        ]
-      : const [
-          MiraTurn('user', 'أستخدم تطبيق التعرفة الجمركية السورية من ميدترانس. أسئلتي عن الاستيراد إلى سوريا والتعرفة الجمركية السورية فقط.'),
-          MiraTurn('assistant', 'تمام، سأجيبك عن التعرفة الجمركية السورية والاستيراد إلى سوريا.'),
-        ];
-
   /// [tariffCode] (8 digits, no dots) makes MIRA answer from the Syrian tariff for that code.
   /// Throws on network or server failure; one retry, as the web chat does.
-  Future<MiraReply> ask(String message, {required String lang, List<MiraTurn> history = const [], String? tariffCode}) async {
+  Future<MiraReply> ask(String message, {required String lang, List<MiraTurn> history = const [], String? tariffCode, MiraVisitor? visitor}) async {
     final recent = history.length > 4 ? history.sublist(history.length - 4) : history;
     final body = jsonEncode({
       'message': message,
       'lang': lang,
-      'history': [for (final t in [..._context(lang), ...recent]) t.toJson()],
-      if (tariffCode != null) 'tariff_card': {'code': tariffCode, 'scope': 'syria', 'on_page': true},
+      'history': [for (final t in recent) t.toJson()],
+      // The app's own scope (Syrian tariff + shipping quotes) is set by MIRA's server.
+      'app': AppConfig.miraAppId,
+      'registered': visitor != null,
+      if (visitor != null) 'visitor': visitor.toJson(),
+      if (tariffCode != null) 'tariff_card': {'code': tariffCode, 'scope': 'sy', 'on_page': true},
       'session_id': await _session(),
     });
     Object? lastError;
@@ -80,7 +85,7 @@ class MiraClient {
         final data = json['data'] as Map<String, dynamic>?;
         final answer = data?['answer'] as String?;
         if (answer == null || answer.trim().isEmpty) throw Exception(json['error'] ?? 'no_answer');
-        return MiraReply(answer.trim(), handoffSuggested: data?['handoff_suggested'] == true);
+        return MiraReply(answer.trim(), handoffSuggested: data?['handoff_suggested'] == true, rfqPending: data?['rfq_pending'] == true);
       } catch (e) {
         lastError = e;
       }
