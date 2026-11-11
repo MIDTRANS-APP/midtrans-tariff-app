@@ -21,7 +21,7 @@
 - احفظ البنود التي تستخدمها، وشاركها كبطاقة.
 - اسأل ميرا، مساعدة ميدترانس، عن البند أو عن الشحن إلى الخليج.
 
-تطبيق غير رسمي من ميدترانس، وليس تابعاً لأي جهة حكومية. الأرقام من نسخة مرجعية للتعرفة الموحّدة وللاسترشاد فقط، والتصنيف والرسوم النهائية تؤكدها جمارك دولة الوصول.
+تطبيق غير رسمي من ميدترانس، وليس تابعاً لأي جهة حكومية. الأرقام من نسخة مرجعية للتعرفة الموحّدة وللاسترشاد فقط، والتصنيف والرسوم النهائية تؤكدها جمارك دولة الوصول. ميدترانس تعمل بإشراف مخلص جمركي معتمد في دبي.
 
 ## English
 
@@ -41,4 +41,4 @@ Search the GCC unified customs tariff (Saudi Arabia, UAE, Kuwait, Qatar, Bahrain
 - Save the codes you use and share them as a card.
 - Ask MIRA, the MIDTRANS assistant, about a code or about shipping to the Gulf.
 
-An unofficial MIDTRANS app, not affiliated with any government body. Figures come from a reference copy of the unified tariff and are for guidance only; final classification and duty are confirmed by the customs of the destination state.
+An unofficial MIDTRANS app, not affiliated with any government body. Figures come from a reference copy of the unified tariff and are for guidance only; final classification and duty are confirmed by the customs of the destination state. MIDTRANS works under a licensed customs broker in Dubai.
