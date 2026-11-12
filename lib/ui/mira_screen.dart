@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../app_state.dart';
 import '../config.dart';
 import '../data/mira_client.dart';
+import 'account_screen.dart';
 import 'contact_card.dart';
 import 'motion.dart';
 import 'theme.dart';
@@ -34,8 +35,11 @@ class MiraScreen extends StatefulWidget {
 }
 
 class _Line {
-  _Line(this.mine, this.text, {this.handoff = false, this.failed = false, this.contact = false, this.filed = false})
+  _Line(this.mine, this.text, {this.handoff = false, this.failed = false, this.contact = false, this.filed = false, this.signIn = false})
       : asksCountry = !mine && !failed && !contact && !filed && _countryQuestion.hasMatch(text);
+
+  /// A quote request waits for the visitor to sign in or give their details (owner 2026-11-10).
+  final bool signIn;
   final bool mine;
   final String text;
   final bool handoff;
@@ -65,12 +69,12 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   MiraLead? get _accountLead {
     final account = AppScope.of(context).account;
     final p = account.profile;
-    if (!account.signedIn || !account.profileComplete) return null;
+    if (!account.signedIn) return null;
     return MiraLead(
-      name: p.name,
+      name: p.name.isNotEmpty ? p.name : (account.user?.displayName ?? ''),
       phone: p.phone,
       whatsapp: p.phone,
-      email: p.email,
+      email: p.email.isNotEmpty ? p.email : (account.user?.email ?? ''),
       visitorId: 'acct-${account.user!.uid}',
     );
   }
@@ -85,18 +89,12 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
   /// MIRA answers anyone without asking anything; the details are asked only when a
   /// request is to go to the team, and nothing reaches the team before (owner 2026-11-10:
   /// «لا يسأل العميل و لا يصل إلى موظفين الشركة طلب عروض اسعار من دون تسجيل»).
-  bool get _registered => _who?.complete == true;
+  bool get _registered => _accountLead != null || _lead?.complete == true;
   final _input = TextEditingController();
   final _scroll = ScrollController();
   final _lines = <_Line>[];
   final _history = <MiraTurn>[];
   bool _busy = false;
-  static final _syria = RegExp(
-      r'(سوريا|سورية|السوري|السورية|دمشق|اللاذقية|طرطوس|Syria|Syrian|Damascus|Latakia|Tartous)',
-      caseSensitive: false);
-  // Only a tariff question about Syria gets the Syrian tariff app: «شحن من دبي إلى دمشق»
-  // is a shipment for MIRA (owner 2026-11-10).
-  static final _tariffWords = RegExp(r'(تعرفة|تعريفة|رسم|رسوم|جمرك|بند|customs|tariff|duty|duties|HS)', caseSensitive: false);
   static final _teamAsk = RegExp(r'^\s*(موظف|التحدث مع|تحدث مع|كلم|أكلم|اكلم|بدي احكي|فريق ميدترانس|خبير|talk to (a |the )?(human|team|agent|staff|expert)|agent|human|expert)', caseSensitive: false);
   String? _lastQuestion;
   String? _lastCode;
@@ -164,18 +162,6 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
     });
     _input.clear();
     _toEnd();
-    // A question about Syria gets MIDTRANS's Syrian tariff app and page; this app covers
-    // the unified GCC tariff only (owner 2026-11-07).
-    if (code == null && _syria.hasMatch(q) && _tariffWords.hasMatch(q)) {
-      final a = app.s.syriaAnswer(AppConfig.syriaAppPage, app.lang == 'ar' ? AppConfig.syriaTariffAr : AppConfig.syriaTariffEn);
-      _mirror.note(visitor: false, text: a, meta: const {'source': 'flow'});
-      setState(() {
-        _lines.add(_Line(false, a));
-        _busy = false;
-      });
-      _toEnd();
-      return;
-    }
     try {
       final reply = await _client.ask(q, lang: app.lang, history: List.of(_history), tariffCode: code, visitor: _registered ? _who : null);
       _history
@@ -187,7 +173,7 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
         if (reply.tag != null) 'tag': reply.tag,
       });
       if (!mounted) return;
-      setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested)));
+      setState(() => _lines.add(_Line(false, reply.answer, handoff: reply.handoffSuggested, signIn: reply.rfqPending && !_registered)));
       // a quote MIRA would have sent to the team: the visitor registers first, then it goes
       if (reply.rfqPending && !_registered) _askTeam();
     } catch (_) {
@@ -349,6 +335,17 @@ class _MiraScreenState extends State<MiraScreen> with AutomaticKeepAliveClientMi
                         icon: const Icon(Icons.support_agent, color: AppColors.gold, size: 18),
                         label: Text(s.miraTeam, style: const TextStyle(color: AppColors.goldText)),
                         onPressed: _askTeam,
+                      ),
+                    ),
+                  ),
+                if (l.signIn && !AppScope.of(context).account.signedIn)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Pressable(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.person, color: AppColors.gold, size: 18),
+                        label: Text(s.miraSignIn, style: const TextStyle(color: AppColors.goldText)),
+                        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AccountScreen())),
                       ),
                     ),
                   ),

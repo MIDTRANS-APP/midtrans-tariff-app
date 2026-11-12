@@ -22,6 +22,11 @@ class AppConfig {
   static const miraApi = 'https://api.midtrans.org/api/v1/chat/ask';
   static const miraOrigin = 'https://chat.midtrans.org';
 
+  /// Which app MIRA is talking in (owner 2026-11-11: one MIRA for every app). MIRA's
+  /// server keeps this app to the GCC tariff and shipping quotes, and gives the Syrian
+  /// app's download link for the Syrian tariff (MIRA docs/APP_MODES.md).
+  static const miraAppId = 'tariff_gcc';
+
   /// Where the Desk sees this app's conversations come from: MIRA keeps one brain,
   /// one store and one set of visitor details for every app (owner 2026-11-10:
   /// «العقل و التخزين و تجميع المعلومات واحدة»); only the screen is the app's own.

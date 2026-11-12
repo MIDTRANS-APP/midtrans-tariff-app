@@ -59,6 +59,7 @@ class S {
   String get miraHint => _t('اكتب سؤالك…', 'Type your question…');
   String get miraThinking => _t('ميرا تكتب…', 'MIRA is typing…');
   String get miraNew => _t('محادثة جديدة', 'New chat');
+  String get miraSignIn => _t('سجّل الدخول لإرسال طلبك إلى الفريق', 'Sign in to send your request to the team');
   String get miraTeam => _t('التحدث مع خبير جمركي', 'Talk to a customs expert');
   String get miraWhatsApp => _t('مراسلتنا على واتساب', 'Message us on WhatsApp');
 

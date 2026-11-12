@@ -62,7 +62,10 @@ void main() {
       body = jsonDecode(req.body) as Map<String, dynamic>;
       return http.Response(jsonEncode({'ok': true, 'data': {'answer': 'x', 'rfq_pending': true}}), 200);
     }));
-    final guest = await client.ask('quote please', lang: 'ar');
+    final guest = await client.ask('quote please', lang: 'ar', tariffCode: '841510109999');
+    expect(body['app'], 'tariff_gcc', reason: 'MIRA\'s server sets this app\'s scope');
+    expect(body['tariff_card'], {'code': '841510109999', 'scope': 'gcc', 'on_page': true});
+    expect(body['history'], isEmpty, reason: 'no hidden opening exchange any more');
     expect(body['registered'], false);
     expect(body.containsKey('visitor'), isFalse);
     expect(guest.rfqPending, isTrue);

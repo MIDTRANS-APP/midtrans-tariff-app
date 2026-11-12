@@ -49,6 +49,11 @@ class MiraLead {
   /// name, phone, WhatsApp and email.
   bool get complete => name.isNotEmpty && phone.isNotEmpty && whatsapp.isNotEmpty && email.isNotEmpty;
 
+  /// A signed-in account (visitorId acct-…): registered whatever its profile holds - the
+  /// signed-in are never asked (owner 2026-11-10/11).
+  bool get account => visitorId.startsWith('acct-');
+  bool get registered => complete || account;
+
   /// The lines the Desk reads for this visitor.
   String get summary => [name, phone, if (whatsapp.isNotEmpty) 'WhatsApp $whatsapp', if (email.isNotEmpty) email].join('\n');
 
@@ -200,20 +205,6 @@ class MiraClient {
     return _sessionId = id;
   }
 
-  /// The app is for the unified GCC tariff (owner 2026-11-07): every conversation opens
-  /// with this exchange, so MIRA answers from the GCC tariff for the six GCC states. Shipping
-  /// is in scope too, so MIRA's brain asks for the shipment as on WhatsApp (owner 2026-11-10).
-  /// It goes in the history, not in the message, so MIRA's code search reads only the question.
-  static List<MiraTurn> _context(String lang) => lang == 'en'
-      ? const [
-          MiraTurn('user', 'I am using the MIDTRANS GCC Customs Tariff app. My questions are about importing into the GCC states (Saudi Arabia, UAE, Kuwait, Qatar, Bahrain, Oman) the unified GCC customs tariff and shipping my goods to the Gulf.'),
-          MiraTurn('assistant', 'Understood, I will answer from the unified GCC customs tariff about importing into the GCC states, and about shipping there.'),
-        ]
-      : const [
-          MiraTurn('user', 'أستخدم تطبيق التعرفة الجمركية الخليجية من ميدترانس. أسئلتي عن الاستيراد إلى دول مجلس التعاون الخليجي (السعودية، الإمارات، الكويت، قطر، البحرين، عُمان) والتعرفة الجمركية الموحّدة وشحن بضاعتي إلى الخليج.'),
-          MiraTurn('assistant', 'تمام، سأجيبك من التعرفة الجمركية الخليجية الموحّدة عن الاستيراد والشحن إلى دول الخليج.'),
-        ];
-
   /// [tariffCode] (12 digits, no dots) makes MIRA answer from the GCC tariff for that code.
   /// Throws on network or server failure; one retry, as the web chat does.
   /// [visitor]: the registered visitor (account or details given), or null for a guest,
@@ -223,7 +214,10 @@ class MiraClient {
     final body = jsonEncode({
       'message': message,
       'lang': lang,
-      'history': [for (final t in [..._context(lang), ...recent]) t.toJson()],
+      'history': [for (final t in recent) t.toJson()],
+      // The app's own scope (GCC tariff + shipping quotes) is set by MIRA's server
+      // (app-profiles.mjs, docs/APP_MODES.md).
+      'app': AppConfig.miraAppId,
       if (tariffCode != null) 'tariff_card': {'code': tariffCode, 'scope': 'gcc', 'on_page': true},
       'session_id': await _session(),
       'registered': visitor != null,
@@ -263,7 +257,7 @@ class MiraMirror {
   final _queue = <Map<String, Object?>>[];
   /// Nothing reaches the Desk before the visitor is registered (owner 2026-11-10); then
   /// the whole conversation goes, the earlier lines first.
-  bool get _released => lead != null && lead!.complete;
+  bool get _released => lead != null && lead!.registered;
   bool _sending = false;
   Timer? _timer;
   MiraLead? lead;
