@@ -39,7 +39,7 @@ const _countries = [
     _Office('الهيئة العامة للجمارك', 'General Authority of Customs', 'https://www.customs.gov.qa/'),
   ]),
   _Country('🇧🇭', 'البحرين', 'Bahrain', [
-    _Office('شؤون الجمارك', 'Bahrain Customs Affairs', 'https://www.bahraincustoms.gov.bh/'),
+    _Office('البوابة الوطنية للحكومة الإلكترونية (خدمات الجمارك)', 'Bahrain National Portal (customs services)', 'https://www.bahrain.bh/'),
   ]),
   _Country('🇴🇲', 'عُمان', 'Oman', [
     _Office('الإدارة العامة للجمارك', 'Directorate General of Customs', 'https://www.customs.gov.om/'),
