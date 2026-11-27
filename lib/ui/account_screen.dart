@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -33,8 +35,40 @@ class _SignIn extends StatefulWidget {
   State<_SignIn> createState() => _SignInState();
 }
 
-class _SignInState extends State<_SignIn> {
+class _SignInState extends State<_SignIn> with WidgetsBindingObserver {
   SignInWay? _busy;
+  Timer? _release;
+
+  /// Google and Apple on Android open in the browser. If the user comes back to the app
+  /// without finishing there (app switcher, home screen), Firebase never answers and the
+  /// button would spin forever (seen 2026-11-27). After returning we give a finished
+  /// sign-in [resumeGrace] to arrive, then free the buttons so the user can try again.
+  static const resumeGrace = Duration(seconds: 8);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    _release?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _busy != null) {
+      _release?.cancel();
+      _release = Timer(resumeGrace, () {
+        if (mounted && _busy != null) setState(() => _busy = null);
+      });
+    } else if (state == AppLifecycleState.paused) {
+      _release?.cancel();
+    }
+  }
 
   Future<void> _go(SignInWay way) async {
     final app = AppScope.of(context);
@@ -45,6 +79,7 @@ class _SignInState extends State<_SignIn> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(app.s.signInFailed)));
       debugPrint('sign-in: ${e is FirebaseAuthException ? e.code : e.runtimeType}');
     } finally {
+      _release?.cancel();
       if (mounted) setState(() => _busy = null);
     }
   }
